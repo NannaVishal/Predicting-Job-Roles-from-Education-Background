@@ -1,0 +1,582 @@
+<div id="result-box" class="result-box">
+
+  <style>
+    .result-box {
+      background: #07101a;
+      padding: 18px;
+      border-radius: 12px;
+      margin-top: 18px;
+      color: #e6eef8;
+      font-family: Inter, system-ui, Segoe UI, Roboto, Arial;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .rb-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .rb-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fff;
+    }
+
+    .rb-sub {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    .top-list {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0 0;
+    }
+
+    .top-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      font-size: 0.95rem;
+    }
+
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    @media (max-width:980px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: linear-gradient(180deg, #07101a, #0b1220);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .best-match {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(96, 165, 250, 0.04), rgba(124, 58, 237, 0.02));
+      border: 1px solid rgba(96, 165, 250, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .best-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .best-title {
+      font-weight: 700;
+      color: #e6eef8;
+    }
+
+    .best-sub {
+      color: #cfe9ff;
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .best-percent {
+      font-weight: 800;
+      color: #60a5fa;
+      font-size: 1.1rem;
+    }
+
+    .top-pred {
+      font-weight: 700;
+      color: #60a5fa;
+      font-size: 1rem;
+    }
+
+    .conf-label {
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    /* loading placeholder */
+    .chart-placeholder {
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.06);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    /* History panel styles (compact) */
+    .rb-history {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      flex-direction: column;
+    }
+
+    .rb-history h4 {
+      margin: 0 0 6px 0;
+      color: #dbeafe;
+      font-size: 1rem;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .history-left {
+      max-width: 68%;
+    }
+
+    .history-role {
+      font-weight: 700;
+      color: #cfe9ff;
+    }
+
+    .history-meta {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .history-skills {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .history-right {
+      text-align: right;
+      min-width: 86px;
+    }
+
+    .history-prob {
+      color: #60a5fa;
+      font-weight: 700;
+    }
+
+    .history-empty {
+      color: #94a3b8;
+      padding: 8px 0;
+    }
+
+    /* keep canvases responsive and consistent heights */
+    #chart-bar,
+    #chart-confidence,
+    #chart-pie {
+      width: 100%;
+      height: 220px;
+      display: block;
+      border-radius: 8px;
+    }
+
+    /* if you want a taller pie, override its height inline where used */
+  </style>
+
+  <div class="rb-header">
+    <div>
+      <div class="rb-title">Prediction Results</div>
+      <div class="rb-sub">Top recommendations & confidence</div>
+    </div>
+    <div class="rb-sub">Top 5</div>
+  </div>
+
+  <!-- Best match (highest % role) -->
+  <div class="best-match" id="best-match">
+    <div class="best-left">
+      <div class="best-title">Best match</div>
+      <div class="best-sub" id="top-pred-sub">—</div>
+    </div>
+    <div class="best-percent" id="top-pred-string">—</div>
+  </div>
+
+  <!-- Top list -->
+  <div class="card">
+    <strong style="color:#60a5fa">Top 5 Predictions</strong>
+    <ul id="top-list" class="top-list" style="margin-top:10px;">
+      {% if prediction_list %}
+      {% for label, pct in prediction_list|slice:":5" %}
+      <li><span>{{ label }}</span><span style="color:#60a5fa">{{ pct }}%</span></li>
+      {% endfor %}
+      {% else %}
+      <li>No predictions</li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <!-- charts (stacked vertically): Probability → Confidence → Pie -->
+  <div class="charts-grid">
+    <div class="card" style="min-height:120px;">
+      <div style="margin-bottom:8px;"><strong>Probability (Top 5)</strong></div>
+      <div style="height:220px;">
+        <canvas id="chart-bar"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="min-height:120px;">
+      <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+        <div><strong>Confidence</strong></div>
+        <div class="rb-sub" id="conf-percent">—</div>
+      </div>
+
+      <div style="height:120px; margin-top:8px;">
+        <canvas id="chart-confidence"></canvas>
+      </div>
+
+    </div>
+
+
+    <!-- Moved pie here so it appears *after* confidence -->
+    <div class="card" style="min-height:240px;">
+      <div style="margin-bottom:8px;"><strong>Breakdown</strong></div>
+      <div style="height:220px;">
+        <canvas id="chart-pie"></canvas>
+      </div>
+    </div>
+
+    
+
+    <div class="card" style="min-height:240px;">
+      <div style="margin-bottom:8px;">
+        <strong>Role Comparison</strong>
+      </div>
+      <div style="height:220px;">
+        <canvas id="chart-role-bar"></canvas>
+      </div>
+    </div>
+
+
+  </div>
+
+  <!-- Optional: server-provided JSON (preferred) -->
+  <script id="prediction-breakdown-json" type="application/json">
+    {% if prediction_breakdown_json %}
+      {{ prediction_breakdown_json|safe }}
+    {% else %}
+      {}
+    {% endif %}
+  </script>
+
+  <!-- Prediction history (optional) -->
+  <div class="rb-history" id="prediction-history">
+    {% if history %}
+    <h4>Recent predictions</h4>
+    <ul class="history-list">
+      {% for h in history %}
+      <li class="history-item" data-history-id="{{ h.pk|default_if_none:'' }}">
+        <div class="history-left">
+          <div class="history-role">{{ h.predicted_role|default:"—" }}</div>
+          <div class="history-meta">{{ h.created_at|date:"d M, Y H:i" }}</div>
+          {% if h.skills %}
+          <div class="history-skills">Skills: {{ h.skills }}</div>
+          {% endif %}
+          {% if h.metadata %}
+          <div class="history-meta" title="{{ h.metadata }}">{{ h.metadata|truncatechars:80 }}</div>
+          {% endif %}
+        </div>
+        <div class="history-right">
+          {% if h.probability %}
+          <div class="history-prob">{{ h.probability }}%</div>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <h4>Recent predictions</h4>
+    <div class="history-empty">No predictions saved yet — they will appear here after you run the model.</div>
+    {% endif %}
+  </div>
+
+  <!-- Chart renderer (unchanged logic, but will pick up moved pie canvas) -->
+  <script>
+    (function () {
+
+      /* ====== small utilities ====== */
+      function byid(id) { return document.getElementById(id); }
+      function safeParseJSONFromEl(id) {
+        const el = byid(id);
+        if (!el) return null;
+        try { const txt = (el.textContent || el.innerText || '').trim(); return txt ? JSON.parse(txt) : null; } catch (e) { console.warn('JSON parse failed for', id, e); return null; }
+      }
+      function buildFromTopList() {
+        const out = {};
+        const nodes = document.querySelectorAll('#top-list li');
+        nodes.forEach(li => {
+          const span = li.querySelector('span:first-child');
+          const pct = li.querySelector('span:last-child');
+          if (span) {
+            const label = span.textContent.trim();
+            const valTxt = pct ? pct.textContent.trim().replace('%', '') : '0';
+            const v = Number(valTxt) || 0;
+            if (label) out[label] = v;
+          }
+        });
+        return out;
+      }
+
+      /* Avoid loading libs multiple times */
+      const CHART_JS_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+      const DATALABELS_URL = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+
+      function loadScriptOnce(url) {
+        return new Promise((resolve) => {
+          if (document.querySelector('script[src="' + url + '"]')) return resolve();
+          const s = document.createElement('script');
+          s.src = url;
+          s.async = true;
+          s.onload = () => resolve();
+          s.onerror = () => { console.warn('Failed loading', url); resolve(); };
+          document.head.appendChild(s);
+        });
+      }
+
+      function ensureChartLibs() {
+        if (window.Chart && window['chartjs-plugin-datalabels']) return Promise.resolve();
+        return loadScriptOnce(CHART_JS_URL).then(() => loadScriptOnce(DATALABELS_URL));
+      }
+
+      /* Destroy chart if present on canvas */
+      function destroyIfExists(c) {
+        try { if (c && c._chart) { c._chart.destroy(); c._chart = null; } } catch (e) { console.warn(e); }
+      }
+
+      /* Chart rendering logic */
+      function renderResultCharts() {
+        // read breakdown JSON (server-provided) or fallback to top-list
+        const raw = safeParseJSONFromEl('prediction-breakdown-json') || {};
+        let breakdown = raw && Object.keys(raw).length ? raw : buildFromTopList();
+
+        // normalize values to percentages (server might send probs 0..1)
+        Object.keys(breakdown).forEach(k => {
+          const n = Number(breakdown[k] || 0);
+          breakdown[k] = (n <= 1.01 ? n * 100.0 : n);
+        });
+
+        // create sorted arrays (desc)
+        const items = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+        const topK = items.slice(0, 5);
+        const labels = topK.map(x => x[0]);
+        const values = topK.map(x => Number(x[1].toFixed(2)));
+
+        // UI top label
+        const topVal = values.length ? values[0] : 0;
+        const topLabel = labels.length ? labels[0] : '—';
+        const confPercentEl = byid('conf-percent');
+        if (confPercentEl) confPercentEl.textContent = topVal ? topVal.toFixed(1) + '%' : '—';
+
+        // set Best match display
+        const topPredStringEl = byid('top-pred-string');
+        const topPredSubEl = byid('top-pred-sub');
+        if (topPredStringEl) topPredStringEl.textContent = topLabel !== '—' ? topLabel : '—';
+        if (topPredSubEl) topPredSubEl.textContent = topVal ? ('Confidence: ' + topVal.toFixed(1) + '%') : '—';
+
+        ensureChartLibs().then(() => {
+          // register datalabels if available
+          try { if (window.Chart && window['chartjs-plugin-datalabels'] && Chart.register) Chart.register(window['chartjs-plugin-datalabels']); } catch (e) { /* ignore */ }
+
+          /* ----- BAR chart ----- */
+          const barCanvas = byid('chart-bar');
+          destroyIfExists(barCanvas);
+          if (barCanvas && labels.length) {
+            const ctx = barCanvas.getContext('2d');
+
+            // create per-bar gradients
+            const palettes = [
+              ['rgba(96,165,250,0.98)', 'rgba(59,130,246,0.85)'],
+              ['rgba(124,58,237,0.98)', 'rgba(112,38,204,0.85)'],
+              ['rgba(34,197,94,0.98)', 'rgba(16,185,129,0.85)'],
+              ['rgba(249,115,22,0.98)', 'rgba(234,88,12,0.85)'],
+              ['rgba(239,68,68,0.98)', 'rgba(220,38,38,0.85)']
+            ];
+            const bg = labels.map((_, i) => {
+              const g = ctx.createLinearGradient(0, 0, 0, barCanvas.clientHeight || 220);
+              const p = palettes[i % palettes.length];
+              g.addColorStop(0, p[0]); g.addColorStop(1, p[1]);
+              return g;
+            });
+
+            barCanvas._chart = new Chart(ctx, {
+              type: 'bar',
+              data: { labels: labels, datasets: [{ label: 'Probability (%)', data: values, backgroundColor: bg, borderRadius: 10, barThickness: 26 }] },
+              options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  datalabels: { color: '#fff', anchor: 'end', align: 'end', formatter: v => v.toFixed(1) + '%' },
+                  tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%' } }
+                },
+                scales: { y: { beginAtZero: true, max: 100, ticks: { color: '#cfe9ff' } }, x: { ticks: { color: '#cfe9ff' } } },
+                animation: { duration: 700, easing: 'easeOutQuart' }
+              }
+            });
+          } else {
+            if (barCanvas) { destroyIfExists(barCanvas); const p = barCanvas.parentElement.querySelector('.chart-placeholder'); if (!p) { const ph = document.createElement('div'); ph.className = 'chart-placeholder'; ph.textContent = 'No data to display'; barCanvas.parentElement.appendChild(ph); } }
+          }
+
+          /* ----- CONFIDENCE GAUGE (stacked bar) ----- */
+          const confCanvas = byid('chart-confidence');
+          destroyIfExists(confCanvas);
+          if (confCanvas) {
+            const ctx = confCanvas.getContext('2d');
+
+            // create chart skeleton with two stacked bars
+            confCanvas._chart = new Chart(ctx, {
+              type: 'bar',
+              data: { labels: [''], datasets: [{ label: 'filled', data: [0], backgroundColor: ctx.createLinearGradient(0, 0, confCanvas.clientWidth || 600, 0), borderRadius: 8 }, { label: 'rest', data: [100], backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 8 }] },
+              options: {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: { x: { stacked: true, beginAtZero: true, max: 100, ticks: { color: '#cfe9ff' } }, y: { stacked: true, grid: { display: false }, ticks: { display: false } } },
+                animation: { duration: 0 }
+              }
+            });
+
+            // gradient fill for first dataset
+            try {
+              const g = ctx.createLinearGradient(0, 0, confCanvas.clientWidth || 600, 0);
+              g.addColorStop(0, 'rgba(96,165,250,0.95)');
+              g.addColorStop(0.6, 'rgba(124,58,237,0.95)');
+              g.addColorStop(1, 'rgba(34,197,94,0.95)');
+              confCanvas._chart.data.datasets[0].backgroundColor = g;
+              confCanvas._chart.update();
+            } catch (e) { console.warn('gradient failed', e); }
+
+            // animate from 0 to topVal using requestAnimationFrame (easeOutCubic)
+            const target = Math.max(0, Math.min(100, topVal || 0));
+            const start = performance.now();
+            const duration = 900;
+            function animateGauge(now) {
+              const t = Math.min(1, (now - start) / duration);
+              const eased = 1 - Math.pow(1 - t, 3);
+              const cur = Math.round((target * eased) * 10) / 10; // one decimal
+              confCanvas._chart.data.datasets[0].data = [cur];
+              confCanvas._chart.data.datasets[1].data = [Math.max(0, 100 - cur)];
+              confCanvas._chart.update('none');
+              if (byid('conf-percent')) byid('conf-percent').textContent = cur.toFixed(1) + '%';
+              if (byid('top-pred-sub')) byid('top-pred-sub').textContent = cur ? ('Confidence: ' + cur.toFixed(1) + '%') : '—';
+              if (t < 1) requestAnimationFrame(animateGauge);
+            }
+            requestAnimationFrame(animateGauge);
+          }
+
+          /* ----- PIE chart ----- */
+          const pieCanvas = byid('chart-pie');
+          destroyIfExists(pieCanvas);
+          if (pieCanvas && labels.length) {
+            const ctx = pieCanvas.getContext('2d');
+            pieCanvas._chart = new Chart(ctx, {
+              type: 'pie',
+              data: { labels: labels, datasets: [{ data: values, backgroundColor: ['rgba(96,165,250,0.95)', 'rgba(124,58,237,0.95)', 'rgba(34,197,94,0.95)', 'rgba(249,115,22,0.95)', 'rgba(239,68,68,0.95)'], hoverOffset: 8 }] },
+              options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { color: '#cfe9ff' } }, datalabels: { color: '#fff', formatter: v => v.toFixed(1) + '%', font: { weight: '700' } } },
+                animation: { duration: 900, easing: 'easeOutBack' }
+              }
+            });
+          } else {
+            if (pieCanvas) { destroyIfExists(pieCanvas); const ph = document.createElement('div'); ph.className = 'chart-placeholder'; ph.textContent = 'No data to display'; pieCanvas.parentElement.appendChild(ph); }
+          }
+          
+
+          const roleCanvas = byid('chart-role-bar');
+          destroyIfExists(roleCanvas);
+
+          if (roleCanvas && labels.length) {
+            const ctx = roleCanvas.getContext('2d');
+
+            roleCanvas._chart = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: labels,
+                datasets: [{
+                  label: 'Match %',
+                  data: values,
+                  backgroundColor: [
+                    'rgba(220,38,38,0.95)',
+                    'rgba(239,68,68,0.95)',
+                    'rgba(248,113,113,0.95)',
+                    'rgba(251,113,133,0.95)',
+                    'rgba(254,202,202,0.95)'
+                  ],
+                  borderRadius: 8
+                }]
+              },
+              options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: ctx => ctx.parsed.x + '%'
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    max: 100,
+                    ticks: { color: '#cfe9ff' },
+                    grid: { color: 'rgba(255,255,255,0.08)' }
+                  },
+                  y: {
+                    ticks: { color: '#e5e7eb' },
+                    grid: { display: false }
+                  }
+                }
+              }
+            });
+          }
+
+
+
+
+        }); // ensureChartLibs
+      } // renderResultCharts
+
+      /* Expose globally and auto-run safely (useful for AJAX insertion) */
+      window.renderResultCharts = function () { try { renderResultCharts(); } catch (e) { console.warn('renderResultCharts() failed', e); } };
+
+      // Auto-run after a short delay (gives time for DOM insertion)
+      setTimeout(() => { try { renderResultCharts(); } catch (e) { console.warn('initial render error', e); } }, 140);
+
+    })();
+  </script>
+
+</div>

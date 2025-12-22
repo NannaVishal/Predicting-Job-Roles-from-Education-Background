@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<nav class="topnav">
+  <div class="nav-left">
+    <!-- <a href="{% url 'dashboard' %}" class="logo">Job Prediction</a> -->
+  </div>
+  <div class="nav-right">
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'predict_form' %}">Predict</a>
+    <a href="{% url 'profile' %}">Profile</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Job Roles Dashboard</h1>
+    <p class="muted">Visualize your talent pool, upload resumes and get instant predictions.</p>
+  </div>
+  <div class="hero-actions">
+    <button id="download-csv" class="btn">Download CSV</button>
+    <button id="export-bar" class="btn outline">Export Bar</button>
+    <button id="export-line" class="btn outline">Export Line</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="grid-kpis">
+    <div class="card kpi">
+      <div class="num" id="k-total">0</div>
+      <div class="small">Total Employees</div>
+    </div>
+    <div class="card kpi">
+      <div class="num" id="k-roles">0</div>
+      <div class="small">Unique Roles</div>
+    </div>
+    <div class="card kpi">
+      <div class="num" id="k-avg">₹0</div>
+      <div class="small">Avg Salary</div>
+    </div>
+    <div class="card kpi">
+      <div class="num" id="k-latest">—</div>
+      <div class="small">Latest Hire Year</div>
+    </div>
+  </div>
+
+  <div class="card filters">
+    <select id="filter-role"></select>
+    <select id="filter-dept"></select>
+    <select id="filter-loc"></select>
+    <button id="apply" class="btn small">Apply</button>
+    <button id="reset" class="btn small secondary">Reset</button>
+    <input type="file" id="file-upload" />
+  </div>
+
+  <div class="layout">
+    <div class="card chart-card">
+      <canvas id="barChart" height="300"></canvas>
+    </div>
+    <div class="card chart-card">
+      <canvas id="lineChart" height="300"></canvas>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <table id="data-table" class="display" style="width:100%">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Department</th>
+          <th>Location</th>
+          <th>Experience</th>
+          <th>Salary</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Resume upload section -->
+  <div class="card upload-card">
+    <label for="resume-file">Upload resume (PDF / DOCX):</label>
+    <input type="file" id="resume-file" accept=".pdf,.doc,.docx" />
+    <button id="upload-resume-btn" class="btn">Upload & Predict</button>
+    <div id="resume-status" class="status"></div>
+
+    <div id="auto-fill-section" style="display:none;margin-top:10px;">
+      <h4>Auto-filled data (from resume)</h4>
+      <pre id="auto-fill-data"></pre>
+    </div>
+
+    <div id="resume-pred-section" style="display:none;margin-top:10px;">
+      <h4>Resume prediction</h4>
+      <pre id="resume-prediction"></pre>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* overall */
+  :root{
+    --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#7c3aed; --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#071226 0%,#07182a 60%);color:#e6eef8}
+  a{color:inherit;text-decoration:none}
+  .topnav{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;background:transparent}
+  .topnav .logo{font-weight:700;color:var(--accent);font-size:18px}
+  .topnav .nav-right a{margin-left:14px;padding:8px;border-radius:8px;transition:background .18s}
+  .topnav .nav-right a:hover{background:var(--glass)}
+
+  .container{max-width:1200px;margin:18px auto;padding:0 20px}
+  .hero{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+  .hero h1{margin:0;font-size:24px;color:white}
+  .hero .muted{color:var(--muted);margin-top:6px}
+  .hero-actions{display:flex;gap:8px}
+  .btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.18);transition:transform .12s,box-shadow .12s}
+  .btn:hover{transform:translateY(-3px)}
+  .btn.small{padding:6px 10px;font-size:13px}
+  .btn.outline, .btn.outline:active{background:transparent;border:1px solid rgba(255,255,255,0.06);box-shadow:none}
+  .btn.secondary{background:#1f2937}
+  .grid-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);backdrop-filter: blur(6px)}
+  .kpi .num{font-size:20px;font-weight:700;color:white}
+  .kpi .small{font-size:13px;color:var(--muted)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px;margin-bottom:12px}
+  .filters select,input{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#e6eef8}
+  .layout{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+  .chart-card{height:320px;padding:12px}
+  .table-card{padding:12px}
+  .table-card table{width:100%;border-collapse:collapse;color:#dbeafe}
+  .upload-card{margin-top:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+  .status{font-size:13px;color:var(--muted)}
+  pre{white-space:pre-wrap;color:#dbeafe}
+  @media(max-width:960px){.grid-kpis{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
+</style>
+
+<!-- JS libs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+/* ===========================
+   Sample data (more rows)
+   =========================== */
+const sampleCSV = `{% if csv_data %}{{ csv_data|escapejs }}{% else %}Role,Department,Location,Experience,Salary,Joined
+Software Engineer,Engineering,Bengaluru,2,850000,2023
+Senior Software Engineer,Engineering,Bengaluru,5,1600000,2021
+Data Analyst,Data,Hyderabad,3,900000,2022
+Product Manager,Product,Mumbai,6,1700000,2020
+HR Manager,HR,Delhi,8,1100000,2019
+UI Designer,Design,Bengaluru,4,950000,2022
+Intern,Engineering,Bengaluru,0,180000,2024
+DevOps Engineer,Engineering,Pune,4,1200000,2021
+QA Engineer,Engineering,Hyderabad,3,700000,2023
+Data Scientist,Data,Bengaluru,4,1400000,2021
+Cloud Architect,Engineering,Chennai,7,2200000,2018
+Business Analyst,Business,Mumbai,3,850000,2022
+Frontend Engineer,Engineering,Bengaluru,3,1050000,2022
+Backend Engineer,Engineering,Pune,4,1250000,2021
+Fullstack Engineer,Engineering,Hyderabad,5,1500000,2020
+Security Engineer,Security,Bengaluru,6,1800000,2019
+Machine Learning Engineer,Data,Bengaluru,4,1550000,2021
+Data Engineer,Data,Pune,3,1200000,2022
+Technical Writer,Docs,Delhi,2,650000,2023
+Support Engineer,Support,Mumbai,1,450000,2024
+Engineering Manager,Engineering,Bengaluru,8,2300000,2017
+Product Designer,Design,Mumbai,5,1300000,2020
+Operations Manager,Operations,Delhi,6,1250000,2019
+Recruiter,HR,Bengaluru,3,600000,2022
+Finance Analyst,Finance,Chennai,2,700000,2023
+Mobile Developer,Engineering,Pune,4,1100000,2021
+Embedded Engineer,Engineering,Bengaluru,5,1350000,2020
+SRE,Engineering,Hyderabad,4,1450000,2021
+Graphic Designer,Design,Delhi,2,480000,2023
+Intern,Design,Mumbai,0,150000,2024
+Training Specialist,HR,Bengaluru,3,520000,2022
+Sales Executive,Sales,Mumbai,4,650000,2021
+Account Manager,Sales,Delhi,6,950000,2019
+Data Intern,Data,Hyderabad,0,160000,2024
+Cloud Engineer,Engineering,Bengaluru,3,1250000,2022
+Research Scientist,R&D,Bengaluru,7,2000000,2018
+Consultant,Consulting,Mumbai,5,1450000,2020
+Analytics Manager,Data,Hyderabad,6,1700000,2019
+HR Intern,HR,Chennai,0,140000,2024
+Customer Success,Support,Pune,2,480000,2023
+DevRel,Engineering,Bengaluru,3,980000,2022
+Security Analyst,Security,Delhi,3,900000,2022
+Technical Recruiter,HR,Mumbai,4,720000,2021
+Project Manager,Operations,Chennai,7,1500000,2018
+Chief Technology Officer,Engineering,Bengaluru,15,4500000,2010
+Data Architect,Data,Bengaluru,9,2600000,2016
+DevOps Lead,Engineering,Pune,9,2400000,2016
+Customer Engineer,Support,Delhi,2,520000,2023
+BI Developer,Data,Mumbai,3,980000,2022
+UX Researcher,Design,Bengaluru,4,1050000,2021
+Marketplace Ops,Operations,Bengaluru,5,950000,2020
+Legal Counsel,Legal,Delhi,8,2100000,2015
+Compliance Officer,Legal,Chennai,6,1350000,2019
+Accounts Exec,Finance,Mumbai,3,650000,2022
+Marketing Manager,Marketing,Bengaluru,5,1350000,2020
+SEO Specialist,Marketing,Chennai,2,540000,2023
+Intern,HR,Mumbai,0,150000,2024
+Data Science Intern,Data,Hyderabad,0,160000,2024
+Product Owner,Product,Bengaluru,6,1600000,2019
+Sales Manager,Sales,Pune,7,1550000,2018
+Business Development,Sales,Delhi,4,880000,2021
+Accountant,Finance,Bengaluru,4,720000,2021
+Cloud Support,Support,Bengaluru,2,510000,2023
+Security Architect,Security,Bengaluru,10,3000000,2012
+Operations Analyst,Operations,Pune,3,670000,2022
+Data Ops,Data,Pune,3,780000,2022
+Talent Partner,HR,Bengaluru,4,780000,2021
+Software Tester,Engineering,Chennai,3,640000,2022
+Intern,Engineering,Pune,0,140000,2024
+Frontend Intern,Engineering,Bengaluru,0,150000,2024
+UX Designer,Design,Hyderabad,3,810000,2022
+Contractor,Engineering,Mumbai,2,720000,2023
+PMO Analyst,Operations,Delhi,3,700000,2022
+Tech Editor,Docs,Bengaluru,2,600000,2023
+Cloud Consultant,Consulting,Pune,6,1650000,2019
+Senior Product Manager,Product,Bengaluru,9,2600000,2014
+Learning & Dev,HR,Bengaluru,5,820000,2020
+Junior QA,Engineering,Hyderabad,1,360000,2024
+Intern,Finance,Chennai,0,150000,2024
+Field Sales,Sales,Delhi,2,420000,2024
+Data Analyst II,Data,Mumbai,2,780000,2023
+Executive Assistant,Admin,Bengaluru,3,420000,2022
+Intern,Support,Pune,0,130000,2024
+Cloud Security,Security,Chennai,5,1420000,2020
+QA Lead,Engineering,Bengaluru,6,1450000,2018
+IT Manager,Engineering,Delhi,10,2400000,2013
+Cloud Specialist,Engineering,Bengaluru,4,1250000,2022
+DevOps SDET,Engineering,Hyderabad,4,1320000,2021
+Data Governance,Data,Mumbai,5,1200000,2020
+Contract PM,Operations,Pune,4,900000,2021
+Machine Learning Intern,Data,Bengaluru,0,160000,2024
+HRBP,HR,Bengaluru,6,1450000,2019
+Customer Support Intern,Support,Chennai,0,120000,2024
+Product Analyst,Product,Hyderabad,2,720000,2023
+Service Delivery,Operations,Delhi,4,780000,2021
+Chief Product Officer,Product,Bengaluru,14,4200000,2011
+Junior DevOps,Engineering,Pune,1,480000,2024
+Lead Data Scientist,Data,Bengaluru,8,2800000,2015
+Cloud Ops,Engineering,Chennai,3,980000,2022
+QAE,Engineering,Pune,2,520000,2023
+Head of Sales,Sales,Mumbai,12,3800000,2012
+Area Manager,Sales,Delhi,7,1500000,2018
+Campus Recruiter,HR,Chennai,1,300000,2024
+Intern,Design,Bengaluru,0,140000,2024
+Developer Advocate,Engineering,Bengaluru,4,980000,2022
+Data Science Manager,Data,Bengaluru,7,2100000,2017
+Infrastructure Engineer,Engineering,Pune,5,1300000,2020
+Product Marketing,Marketing,Bengaluru,4,1050000,2021
+Analytics Engineer,Data,Chennai,3,980000,2022
+Software Architect,Engineering,Bengaluru,11,3000000,2012
+Legal Intern,Legal,Chennai,0,120000,2024
+Head of People,HR,Bengaluru,11,3100000,2013
+Growth Marketer,Marketing,Mumbai,4,980000,2021
+AI Researcher,R&D,Bengaluru,6,2200000,2019
+Operations Lead,Operations,Pune,8,2100000,2016
+Security Ops,Security,Hyderabad,4,980000,2022
+Data Ops Intern,Data,Pune,0,150000,2024
+Cloud Architect II,Engineering,Bengaluru,9,2650000,2016
+Tech Ops,Operations,Delhi,3,720000,2023
+Innovation Lead,R&D,Bengaluru,7,2000000,2017
+Contractor,Design,Mumbai,1,300000,2023
+Dev Manager,Engineering,Bengaluru,10,2600000,2014
+Intern,Sales,Delhi,0,140000,2024
+Finance Intern,Finance,Mumbai,0,150000,2024
+Partner Manager,Business,Mumbai,6,1400000,2019
+Freelance Designer,Design,Chennai,2,420000,2023
+Software Intern,Engineering,Bengaluru,0,150000,2024
+{"/*": "end sample"}{% endif %}`;
+
+let rawData = [];
+let filteredData = [];
+let barChart = null;
+let lineChart = null;
+let dataTable = null;
+
+/* -------------------------
+   CSV parsing + UI refresh
+   ------------------------- */
+function parseCSV(text){
+  const res = Papa.parse(text,{header:true,skipEmptyLines:true});
+  rawData = res.data.map(r => ({
+    Role: r.Role,
+    Department: r.Department,
+    Location: r.Location,
+    Experience: parseInt(r.Experience) || 0,
+    Salary: parseInt(r.Salary) || 0,
+    Joined: r.Joined || ''
+  })).filter(Boolean);
+  filteredData = [...rawData];
+  refreshUI();
+}
+
+function refreshUI(){
+  const roles = [...new Set(rawData.map(r=>r.Role).filter(Boolean))].sort();
+  const depts = [...new Set(rawData.map(r=>r.Department).filter(Boolean))].sort();
+  const locs = [...new Set(rawData.map(r=>r.Location).filter(Boolean))].sort();
+  populateSelect('filter-role',roles);
+  populateSelect('filter-dept',depts);
+  populateSelect('filter-loc',locs);
+
+  document.getElementById('k-total').innerText = filteredData.length;
+  document.getElementById('k-roles').innerText = new Set(filteredData.map(r=>r.Role)).size;
+  const avg = filteredData.length? Math.round(filteredData.reduce((s,r)=>s+(r.Salary||0),0)/filteredData.length):0;
+  document.getElementById('k-avg').innerText = avg? `₹${numberWithCommas(avg)}` : '₹0';
+  const years = filteredData.map(r => r.Joined).filter(Boolean);
+  document.getElementById('k-latest').innerText = years.length? Math.max(...years.map(y=>parseInt(y)||0)) : '—';
+
+  populateTable(filteredData);
+  drawBarChart();
+  drawLineChart();
+}
+
+/* select/populate/table */
+function populateSelect(id,items){
+  const sel = document.getElementById(id);
+  const current = sel.value || '';
+  sel.innerHTML = `<option value="">All</option>` + items.map(i=>`<option value="${escapeHtml(i)}">${escapeHtml(i)}</option>`).join('');
+  sel.value = current;
+}
+
+function populateTable(data){
+  const tbody = document.querySelector('#data-table tbody');
+  tbody.innerHTML = data.map(r=>`<tr>
+    <td>${escapeHtml(r.Role)}</td>
+    <td>${escapeHtml(r.Department)}</td>
+    <td>${escapeHtml(r.Location)}</td>
+    <td>${r.Experience}</td>
+    <td>${numberWithCommas(r.Salary)}</td>
+    <td>${escapeHtml(r.Joined)}</td>
+  </tr>`).join('');
+  if ($.fn.DataTable.isDataTable('#data-table')) $('#data-table').DataTable().destroy();
+  $('#data-table').DataTable({pageLength:8});
+}
+
+/* charts */
+function drawBarChart(){
+  const counts = {};
+  filteredData.forEach(r=>{ counts[r.Role] = (counts[r.Role]||0) + 1; });
+  const items = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const labels = items.map(i=>i[0]);
+  const data = items.map(i=>i[1]);
+  const ctx = document.getElementById('barChart').getContext('2d');
+  if (barChart) barChart.destroy();
+  barChart = new Chart(ctx, {
+    type:'bar',
+    data:{labels, datasets:[{label:'Count', data, borderRadius:6, barThickness:22}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+}
+
+function drawLineChart(){
+  const counts = {};
+  filteredData.forEach(r=>{ const y = (r.Joined||'').trim(); if (y) counts[y] = (counts[y]||0)+1; });
+  const years = Object.keys(counts).sort();
+  const data = years.map(y=>counts[y]);
+  const ctx = document.getElementById('lineChart').getContext('2d');
+  if (lineChart) lineChart.destroy();
+  lineChart = new Chart(ctx, {
+    type:'line',
+    data:{ labels: years, datasets: [{ label:'Hires', data, fill:true, tension:0.3 }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+}
+
+/* helpers */
+function applyFilters(){
+  const role=document.getElementById('filter-role').value;
+  const dept=document.getElementById('filter-dept').value;
+  const loc=document.getElementById('filter-loc').value;
+  filteredData = rawData.filter(r =>
+    (!role || r.Role===role) &&
+    (!dept || r.Department===dept) &&
+    (!loc || r.Location===loc)
+  );
+  refreshUI();
+}
+
+function numberWithCommas(x){return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g,",");}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));}
+
+/* ---------- file upload handlers ---------- */
+document.getElementById('file-upload').addEventListener('change', (e)=> {
+  const f = e.target.files[0];
+  if (!f) return;
+  Papa.parse(f, {
+    header:true,
+    skipEmptyLines:true,
+    complete:(res)=>parseCSV(Papa.unparse(res.data))
+  });
+});
+
+document.getElementById('apply').addEventListener('click',()=>applyFilters());
+document.getElementById('reset').addEventListener('click',()=> {
+  document.getElementById('filter-role').value='';
+  document.getElementById('filter-dept').value='';
+  document.getElementById('filter-loc').value='';
+  filteredData = [...rawData];
+  refreshUI();
+});
+
+/* csv download */
+document.getElementById('download-csv').addEventListener('click',()=> {
+  const csv = Papa.unparse(filteredData);
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'data.csv';
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+});
+
+/* chart export (PNG) */
+function exportCanvasAsPNG(canvas, filename) {
+  try {
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png', 1.0);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error('Export failed', e);
+  }
+}
+document.getElementById('export-bar').addEventListener('click', ()=> exportCanvasAsPNG(document.getElementById('barChart'), 'bar-chart.png'));
+document.getElementById('export-line').addEventListener('click', ()=> exportCanvasAsPNG(document.getElementById('lineChart'), 'line-chart.png'));
+
+/* ---------- resume upload -> POST to backend, show auto-fill, store and redirect ---------- */
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+const uploadBtn = document.getElementById('upload-resume-btn');
+const resumeInput = document.getElementById('resume-file');
+const resumeStatus = document.getElementById('resume-status');
+const autoFillSection = document.getElementById('auto-fill-section');
+const autoFillDataPre = document.getElementById('auto-fill-data');
+const resumePredSection = document.getElementById('resume-pred-section');
+const resumePredPre = document.getElementById('resume-prediction');
+
+uploadBtn.addEventListener('click', async () => {
+  resumeStatus.style.color = '#e6eef8';
+  resumeStatus.innerText = '';
+
+  const file = resumeInput.files[0];
+  if (!file) {
+    resumeStatus.style.color = 'crimson';
+    resumeStatus.innerText = 'Please choose a resume file first.';
+    return;
+  }
+
+  // accept check
+  const allowed = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!allowed.includes(file.type) && !['pdf','doc','docx'].includes(ext)) {
+    resumeStatus.style.color = 'crimson';
+    resumeStatus.innerText = 'Unsupported file type. Upload PDF, DOC or DOCX.';
+    return;
+  }
+
+  const form = new FormData();
+  form.append('resume', file);
+  const csrf = getCookie('csrftoken') || '';
+  resumeStatus.innerText = 'Uploading...';
+
+  try {
+    const resp = await fetch("{% url 'upload_resume' %}", {
+      method: 'POST',
+      body: form,
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': csrf }
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      resumeStatus.style.color = 'crimson';
+      resumeStatus.innerText = `Upload failed (${resp.status}). ${text ? 'Server message: ' + text : ''}`;
+      return;
+    }
+
+    let json;
+    try { json = await resp.json(); } catch(e){ json = null; }
+
+    resumeStatus.style.color = 'lightgreen';
+    resumeStatus.innerText = 'Upload succeeded. Redirecting to prediction page...';
+
+    // show immediate info
+    if (json && json.auto_fill) {
+      autoFillSection.style.display = 'block';
+      autoFillDataPre.innerText = JSON.stringify(json.auto_fill, null, 2);
+    } else {
+      autoFillSection.style.display = 'none';
+    }
+    if (json && json.prediction) {
+      resumePredSection.style.display = 'block';
+      resumePredPre.innerText = JSON.stringify(json.prediction, null, 2);
+    } else {
+      resumePredSection.style.display = 'none';
+    }
+
+    // store auto_fill into sessionStorage so predict page can pre-fill form
+    if (json && json.auto_fill) {
+      try {
+        sessionStorage.setItem('edu2job_auto_fill', JSON.stringify(json.auto_fill));
+      } catch(e) {
+        console.warn('sessionStorage set failed', e);
+      }
+    }
+
+    // redirect to predict page
+    setTimeout(()=> {
+      window.location.href = "{% url 'predict_form' %}";
+    }, 700);
+
+  } catch (err) {
+    console.error(err);
+    resumeStatus.style.color = 'crimson';
+    resumeStatus.innerText = 'Upload failed — network error.';
+  }
+});
+
+/* ---------- init ---------- */
+parseCSV(sampleCSV);
+</script>
+{% endblock %}

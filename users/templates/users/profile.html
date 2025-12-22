@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+  :root{
+    --bg-1: #071022; --bg-2: #0b1530; --card-radius:14px;
+    --glass-1: rgba(255,255,255,0.03); --glass-2: rgba(255,255,255,0.02);
+    --accent-1: #7c5cff; --accent-2: #4fd1c5; --muted: rgba(255,255,255,0.68);
+  }
+  body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:#e6eef8;-webkit-font-smoothing:antialiased}
+  .profile-wrap{max-width:1150px;margin:36px auto;padding:22px}
+  .card{background:linear-gradient(180deg,var(--glass-1),var(--glass-2));border:1px solid rgba(255,255,255,0.04);border-radius:var(--card-radius);box-shadow:0 10px 40px rgba(2,6,23,0.6);overflow:hidden}
+  .card .card-header{padding:16px;border-bottom:1px solid rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:space-between}
+  .card .card-body{padding:28px;min-height:160px;transition:all .18s ease}
+
+  .profile-top{display:flex;gap:16px;align-items:center}
+  .avatar-wrap{position:relative;width:110px;height:110px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+  .avatar{font-size:44px}
+  .avatar img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+  .avatar-badge{position:absolute;right:-6px;bottom:-6px;background:linear-gradient(90deg,var(--accent-1),#5b8cff);padding:6px;border-radius:10px;box-shadow:0 6px 18px rgba(124,92,255,0.12);border:1px solid rgba(255,255,255,0.06);cursor:pointer}
+
+  .name-block h1{margin:0;font-size:1.25rem;font-weight:800}
+  .small{font-size:.9rem}
+  .muted{color:var(--muted)}
+
+  .actions{display:flex;gap:10px}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border-radius:10px;border:none;cursor:pointer}
+  .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit}
+  .btn-glow{background:linear-gradient(90deg,var(--accent-1),#5b8cff);color:#fff;box-shadow:0 10px 30px rgba(92,74,255,0.12)}
+  .btn-sm{padding:.35rem .6rem;font-size:.85rem}
+
+  .layout{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px}
+  .col-left{flex:0 0 340px;max-width:340px}
+  .col-right{flex:1 1 720px}
+
+  dl.info{margin:0}
+  dt{color:var(--muted);font-size:.9rem}
+  dd{margin:0 0 10px 0;font-weight:700}
+
+  .file-drop{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;border:1px dashed rgba(255,255,255,0.03);background:rgba(255,255,255,0.008);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+  .file-drop:focus,.file-drop:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(2,6,23,0.6);border-color:rgba(255,255,255,0.06)}
+  .file-meta{font-weight:700}
+  .file-sub{color:var(--muted);font-size:.9rem}
+
+  .skills{display:flex;gap:8px;flex-wrap:wrap}
+  .skill{background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);font-weight:700}
+
+  .activity-list{list-style:none;padding:0;margin:0}
+  .activity-list li{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
+  .empty-state{text-align:center;padding:28px}
+
+  /* resume area */
+  .resume-actions{display:flex;gap:8px;align-items:center}
+  .history-row{display:flex;justify-content:space-between;align-items:center}
+
+  /* modal preview skeleton */
+  .skeleton{background:linear-gradient(90deg,#0e1a2b,#0b1220);min-height:140px;border-radius:8px;padding:12px;color:#9fb7d9}
+
+  /* responsive */
+  @media (max-width:980px){
+    .layout{flex-direction:column-reverse}
+    .col-left,.col-right{max-width:100%;flex:1 1 100%}
+    .avatar-wrap{width:88px;height:88px}
+  }
+
+  /* subtle animations */
+  .fade-in{animation:fadeIn .28s ease both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* preserve whitespace in resume preview & safe wrapping */
+  #resume-preview-wrapper {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow:auto;
+    color:#dbeafe;
+    width: 900px;
+    font-size:1rem;
+    max-height:750px;   /* increased from 520px */
+    min-height:520px;   /* ensures tall area on open */
+    padding:18px;
+    border-radius:10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+
+  /* compare boxes */
+  #compare-left, #compare-right {
+    background: linear-gradient(90deg,#0e1a2b,#0b1220);
+    padding:14px;
+    border-radius:8px;
+    color:#dbeafe;
+    max-height:620px;
+    overflow:auto;
+  }
+</style>
+
+<div class="profile-wrap">
+  <div class="card">
+    <div class="card-header" role="region" aria-label="profile header">
+      <div class="profile-top" style="align-items:center">
+        <div style="display:flex;gap:14px;align-items:center">
+          <label for="avatar-input" class="avatar-wrap" title="Change avatar">
+            <div class="avatar" id="avatar-display">
+              {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="{{ user.get_full_name|default:user.username }}'s avatar">
+              {% else %}
+                <i class="fas fa-user" aria-hidden="true"></i>
+              {% endif %}
+            </div>
+            <div class="avatar-badge" aria-hidden="true"><i class="fas fa-camera"></i></div>
+            <input id="avatar-input" name="avatar" type="file" accept="image/*" style="position:absolute;opacity:0;left:0;top:0;width:100%;height:100%;cursor:pointer" aria-label="Upload avatar">
+          </label>
+
+          <div class="name-block">
+            <h1 class="fade-in">{{ user.get_full_name|default:user.username }}</h1>
+            <p class="small muted">{{ user.email }} · <span>Member since {{ user.date_joined|date:"Y" }}</span></p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a href="{% url 'predict' %}" class="btn btn-outline btn-sm" aria-label="Quick predict"><i class="fas fa-magic"></i><span class="small"> Quick Predict</span></a>
+          <a href="{% url 'edit_profile' %}" class="btn btn-glow btn-sm" aria-label="Edit profile"><i class="fas fa-edit"></i><span class="small"> Edit Profile</span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="layout">
+        <!-- LEFT COLUMN -->
+        <aside class="col-left" >
+          <section class="card" aria-labelledby="contact-heading" style="margin-bottom:14px;width:1000px">
+            <div class="card-body">
+              <h3 id="contact-heading" style="margin-top:0">Contact</h3>
+              <dl class="info">
+                <dt>Phone</dt>
+                <dd>{{ profile.phone|default:"—" }}</dd>
+                <dt>Location</dt>
+                <dd>{{ profile.location|default:"—" }}</dd>
+                <dt>Company</dt>
+                <dd>{{ profile.current_company|default:"—" }}</dd>
+                <dt>Experience</dt>
+                <dd>{{ profile.experience_years|default:"—" }}</dd>
+              </dl>
+
+              <hr style="border-color:rgba(255,255,255,0.02)">
+
+              <h4 style="margin:8px 0">Resume</h4>
+              <p class="small muted">Supported: <strong>PDF, DOCX</strong> · max <strong>6MB</strong>. Upload to auto-extract skills & get a prediction.</p>
+
+              <form method="post" action="{% url 'upload_resume' %}" enctype="multipart/form-data" id="resume-form">
+                {% csrf_token %}
+                <label for="resume-upload" class="file-drop" tabindex="0">
+                  <input id="resume-upload" name="resume" type="file" accept=".pdf,.docx" required style="position:absolute;opacity:0;left:0;top:0;width:100%;height:100%;cursor:pointer">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:48px;height:48px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,0.02)"><i class="fas fa-file-lines" aria-hidden="true"></i></div>
+                    <div>
+                      <div id="file-name" class="file-meta">Choose or drop a file…</div>
+                      <div class="file-sub">Drag & drop or click to browse</div>
+                    </div>
+                  </div>
+                </label>
+
+                <div style="display:flex;gap:10px;margin-top:12px;width: 250px;">
+                  <button type="submit" class="btn btn-glow" style="flex:1;" aria-label="Upload and predict"><i class="fas fa-magic"></i> Upload & Predict</button>
+                  <button type="button" class="btn btn-outline" id="clear-file">Clear</button>
+                </div>
+              </form>
+
+              <div style="margin-top:12px">
+                <div class="skills" aria-live="polite">
+                  {% for skill in profile.extracted_skills.all %}
+                    <span class="skill">{{ skill.name }}</span>
+                  {% empty %}
+                    <div class="small muted">No extracted skills yet — they will appear after upload.</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <!-- RIGHT COLUMN -->
+        <main class="col-right">
+          <section class="card" aria-labelledby="prediction-heading">
+            <div class="card-header">
+              <div>
+                <h3 id="prediction-heading" style="margin:0;font-weight:800">Saved Prediction</h3>
+                <p class="small muted">Latest auto-saved role from resume or manual prediction</p>
+              </div>
+
+              <div>
+                {% if profile.predicted_role %}
+                  <span class="skill" style="background:linear-gradient(90deg,#22c55e,#86efac);color:#052e16">{{ profile.predicted_role }}</span>
+                  <span class="small muted" style="margin-left:8px">Confidence: {{ profile.predicted_confidence|default:"—" }}</span>
+                {% else %}
+                  <a href="{% url 'predict' %}" class="btn btn-outline btn-sm">Make a prediction</a>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="card-body">
+              {% if profile.predicted_role %}
+                <div class="prediction-hero" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+                  <div>
+                    <h2 style="margin:0;color:var(--accent-1);font-weight:900">{{ profile.predicted_role }}</h2>
+                    <p class="small muted">Confidence: <strong>{{ profile.predicted_confidence|default:"—" }}</strong></p>
+                    <p class="small muted">Based on your most recent resume upload or manual prediction.</p>
+                  </div>
+
+                  <div style="display:flex;flex-direction:column;gap:8px;align-items:end">
+                    <div>
+                      <a href="{% url 'edit_profile' %}" class="btn btn-outline btn-sm"><i class="fas fa-pencil-alt"></i> Edit</a>
+                      <a href="{% url 'predict' %}" class="btn btn-glow btn-sm"><i class="fas fa-rocket"></i> Re-run</a>
+                    </div>
+                    <div class="small muted">Updated: {% if profile.predicted_at %}{{ profile.predicted_at|date:"M d, Y" }}{% else %}—{% endif %}</div>
+                  </div>
+                </div>
+              {% else %}
+                <div class="empty-state">
+                  <i class="fas fa-inbox fa-3x mb-3"></i>
+                  <p class="mb-2">No saved prediction yet. Upload a resume or visit Predict to get started.</p>
+                  <a href="{% url 'predict' %}" class="btn btn-glow btn-sm"><i class="fas fa-magic"></i> Go to Predict</a>
+                </div>
+              {% endif %}
+            </div>
+          </section>
+
+          <div style="height:14px"></div>
+
+          <section class="card" aria-labelledby="resume-history">
+            <div class="card-header">
+              <h4 id="resume-history" style="margin:0;font-weight:800">Resume History</h4>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button class="btn btn-outline btn-sm" id="download-all">Download all</button>
+                <button class="btn btn-outline btn-sm" id="compare-selected">Compare selected</button>
+              </div>
+            </div>
+
+            <div class="card-body">
+              {% comment %} Primary resume (single-file) {% endcomment %}
+              {% if profile.resume %}
+                <div class="history-row" style="gap:12px;align-items:center;">
+                  <div>
+                    <div style="font-weight:700">{{ profile.resume.name|default:"Resume" }}</div>
+                    {% if profile.updated_at %}
+                      <div class="small muted">Last updated: {{ profile.updated_at|date:"M d, Y" }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="resume-actions">
+                    <a href="{{ profile.resume.url }}" class="btn btn-outline btn-sm" download><i class="fas fa-download"></i> Download</a>
+                    <button class="btn btn-outline btn-sm preview-btn" id="preview-resume" data-resume-id="{{ profile.resume.id|default:"" }}" type="button" data-resume-url="{{ profile.resume.url }}"><i class="fas fa-eye"></i> Preview</button>
+                  </div>
+                </div>
+              {% endif %}
+
+              <div style="margin-top:12px">
+                <h6 class="small muted">All uploads</h6>
+
+                {% comment %} Use explicit branching instead of chained defaults to avoid TemplateSyntaxError {% endcomment %}
+                <ul class="activity-list" id="resume-list" style="margin:0;padding:0;">
+                  {% if profile.resume_history %}
+                    {% for r in profile.resume_history %}
+                      <li style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02);">
+                        <div style="display:flex;gap:10px;align-items:center;flex:1;min-width:0;">
+                          <input type="checkbox" class="select-resume" data-resume-id="{{ r.id|default:"" }}" aria-label="Select {{ r.name|default:r.filename|default:'resume' }} for compare">
+                          <div style="min-width:0;overflow:hidden">
+                            <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name|default:r.filename|default:"Resume" }}</div>
+                            {% if r.updated_at %}<div class="small muted">{{ r.updated_at|date:"M d, Y" }}</div>{% endif %}
+                          </div>
+                        </div>
+
+                        <div style="display:flex;gap:8px;flex-shrink:0">
+                          {% if r.url %}<a href="{{ r.url }}" class="btn btn-outline btn-sm" download><i class="fas fa-download"></i></a>{% endif %}
+                          <button class="btn btn-outline btn-sm preview-btn" data-resume-id="{{ r.id|default:"" }}" data-resume-url="{{ r.url|default:r.preview_url|default:"" }}"><i class="fas fa-eye"></i></button>
+                          <button class="btn btn-outline btn-sm rename-btn" data-resume-id="{{ r.id|default:"" }}">Rename</button>
+                          <button class="btn btn-outline btn-sm delete-btn" data-resume-id="{{ r.id|default:"" }}">Delete</button>
+                        </div>
+                      </li>
+                    {% endfor %}
+                  {% elif profile.resumes %}
+                    {% for r in profile.resumes %}
+                      <li style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02);">
+                        <div style="display:flex;gap:10px;align-items:center;flex:1;min-width:0;">
+                          <input type="checkbox" class="select-resume" data-resume-id="{{ r.id|default:"" }}" aria-label="Select {{ r.name|default:r.filename|default:'resume' }} for compare">
+                          <div style="min-width:0;overflow:hidden">
+                            <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name|default:r.filename|default:"Resume" }}</div>
+                            {% if r.updated_at %}<div class="small muted">{{ r.updated_at|date:"M d, Y" }}</div>{% endif %}
+                          </div>
+                        </div>
+
+                        <div style="display:flex;gap:8px;flex-shrink:0">
+                          {% if r.url %}<a href="{{ r.url }}" class="btn btn-outline btn-sm" download><i class="fas fa-download"></i></a>{% endif %}
+                          <button class="btn btn-outline btn-sm preview-btn" data-resume-id="{{ r.id|default:"" }}" data-resume-url="{{ r.url|default:r.preview_url|default:"" }}"><i class="fas fa-eye"></i></button>
+                          <button class="btn btn-outline btn-sm rename-btn" data-resume-id="{{ r.id|default:"" }}">Rename</button>
+                          <button class="btn btn-outline btn-sm delete-btn" data-resume-id="{{ r.id|default:"" }}">Delete</button>
+                        </div>
+                      </li>
+                    {% endfor %}
+                  {% elif profile.uploads %}
+                    {% for r in profile.uploads %}
+                      <li style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02);">
+                        <div style="display:flex;gap:10px;align-items:center;flex:1;min-width:0;">
+                          <input type="checkbox" class="select-resume" data-resume-id="{{ r.id|default:"" }}" aria-label="Select {{ r.name|default:r.filename|default:'resume' }} for compare">
+                          <div style="min-width:0;overflow:hidden">
+                            <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name|default:r.filename|default:"Resume" }}</div>
+                            {% if r.updated_at %}<div class="small muted">{{ r.updated_at|date:"M d, Y" }}</div>{% endif %}
+                          </div>
+                        </div>
+
+                        <div style="display:flex;gap:8px;flex-shrink:0">
+                          {% if r.url %}<a href="{{ r.url }}" class="btn btn-outline btn-sm" download><i class="fas fa-download"></i></a>{% endif %}
+                          <button class="btn btn-outline btn-sm preview-btn" data-resume-id="{{ r.id|default:"" }}" data-resume-url="{{ r.url|default:r.preview_url|default:"" }}"><i class="fas fa-eye"></i></button>
+                          <button class="btn btn-outline btn-sm rename-btn" data-resume-id="{{ r.id|default:"" }}">Rename</button>
+                          <button class="btn btn-outline btn-sm delete-btn" data-resume-id="{{ r.id|default:"" }}">Delete</button>
+                        </div>
+                      </li>
+                    {% endfor %}
+                  {% else %}
+                    <li class="small muted">No resume uploads yet.</li>
+                  {% endif %}
+                </ul>
+              </div>
+
+              <!-- Preview modal (loads resume text) -->
+              <div class="modal fade" id="resumeModal" tabindex="-1" aria-hidden="true" aria-labelledby="resumeModalLabel">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 id="resumeModalLabel" class="modal-title">Resume preview</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div style="display:flex;gap:12px;align-items:flex-start;">
+                        <div style="flex:1">
+                          <small class="muted" >Preview text </small>
+                          <div id="resume-preview-wrapper" class="skeleton" aria-live="polite" role="region">
+                            Click <strong>Preview</strong> to load resume text.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const fileInput = document.getElementById('resume-upload');
+    const fileName = document.getElementById('file-name');
+    const clearBtn = document.getElementById('clear-file');
+    const previewBtn = document.getElementById('preview-resume');
+    const previewWrapper = document.getElementById('resume-preview-wrapper');
+    const avatarInput = document.getElementById('avatar-input');
+    const avatarDisplay = document.getElementById('avatar-display');
+
+    // file input UI
+    if(fileInput){
+      fileInput.addEventListener('change', e => {
+        const f = e.target.files[0];
+        if(!f) return fileName.textContent = 'Choose or drop a file…';
+        // size/format guard (6MB)
+        if(f.size > 6 * 1024 * 1024){
+          alert('File too large. Maximum 6MB.');
+          fileInput.value = '';
+          fileName.textContent = 'Choose or drop a file…';
+          return;
+        }
+        fileName.textContent = f.name;
+      });
+
+      // drag & drop support
+      const label = fileInput.closest('label');
+      if(label){
+        ['dragenter','dragover'].forEach(evt => label.addEventListener(evt, ev => { ev.preventDefault(); label.classList.add('drag'); }));
+        ['dragleave','drop'].forEach(evt => label.addEventListener(evt, ev => { ev.preventDefault(); label.classList.remove('drag'); }));
+        label.addEventListener('drop', ev => {
+          const f = ev.dataTransfer.files[0];
+          if(f) fileInput.files = ev.dataTransfer.files, fileInput.dispatchEvent(new Event('change'));
+        });
+      }
+    }
+
+    if(clearBtn){ clearBtn.addEventListener('click', ()=>{ if(fileInput) fileInput.value=''; fileName.textContent='Choose or drop a file…'; }); }
+
+    // Resume preview fetch (single primary preview button)
+    async function fetchPreview(resume_id, resume_url){
+      if(!previewWrapper) return;
+      previewWrapper.textContent = 'Loading preview...';
+      try{
+        // Prefer backend preview endpoint by id if available
+        const url = resume_id ? (`{% url 'users:profile' %}?preview=1&resume_id=${resume_id}`) : (`{% url 'users:profile' %}?preview=1&resume_url=${encodeURIComponent(resume_url||'')}`);
+        const resp = await fetch(url, { credentials: 'same-origin' });
+        if(!resp.ok) throw new Error('Preview not available');
+        const data = await resp.json();
+        previewWrapper.textContent = data.resume_text ? data.resume_text.substring(0,2000) : 'No preview text available.';
+      }catch(err){ previewWrapper.textContent = 'Preview not available.' }
+    }
+
+    if(previewBtn && previewWrapper){
+      previewBtn.addEventListener('click', async () => {
+        // open modal programmatically
+        const modalElement = document.getElementById('resumeModal');
+        if(modalElement && typeof bootstrap !== 'undefined'){ new bootstrap.Modal(modalElement).show(); }
+        await fetchPreview(null, null);
+      });
+    }
+
+    // Delegate clicks for dynamic preview buttons inside resume list
+    document.addEventListener('click', async (e) => {
+      const target = e.target.closest('.preview-btn');
+      if(target){
+        const rid = target.getAttribute('data-resume-id');
+        const rurl = target.getAttribute('data-resume-url');
+        // open preview modal
+        const modalElement = document.getElementById('resumeModal');
+        if(modalElement && typeof bootstrap !== 'undefined'){ new bootstrap.Modal(modalElement).show(); }
+        await fetchPreview(rid, rurl);
+      }
+
+      const compareBtn = e.target.closest('#compare-selected');
+      if(compareBtn){
+        const checked = Array.from(document.querySelectorAll('.select-resume:checked')).map(i=>i.getAttribute('data-resume-id')).filter(Boolean);
+        if(checked.length !== 2){ alert('Select exactly 2 resumes to compare'); return; }
+        // fetch both previews
+        const left = checked[0], right = checked[1];
+        const leftResp = await fetch(`{% url 'users:profile' %}?preview=1&resume_id=${left}`, { credentials: 'same-origin' });
+        const rightResp = await fetch(`{% url 'users:profile' %}?preview=1&resume_id=${right}`, { credentials: 'same-origin' });
+        const leftData = leftResp.ok ? await leftResp.json() : { resume_text: 'Preview not available' };
+        const rightData = rightResp.ok ? await rightResp.json() : { resume_text: 'Preview not available' };
+        document.getElementById('compare-left').textContent = leftData.resume_text ? leftData.resume_text.substring(0,20000) : 'No preview';
+        document.getElementById('compare-right').textContent = rightData.resume_text ? rightData.resume_text.substring(0,20000) : 'No preview';
+        // open compare modal
+        const compareModalEl = document.getElementById('compareModal');
+        if(compareModalEl && typeof bootstrap !== 'undefined'){ new bootstrap.Modal(compareModalEl).show(); }
+      }
+
+      // download all
+      const downloadAll = e.target.closest('#download-all');
+      if(downloadAll){
+        const links = Array.from(document.querySelectorAll('#resume-list a[download]')).map(a=>a.href);
+        if(!links.length){ alert('No downloadable resumes found'); return; }
+        links.forEach(l=>{ const a=document.createElement('a'); a.href=l; a.download=''; document.body.appendChild(a); a.click(); a.remove(); });
+      }
+
+      // delete and rename stubs (show confirm / prompt). Backend endpoints required.
+      const del = e.target.closest('.delete-btn');
+      if(del){
+        const id = del.getAttribute('data-resume-id');
+        if(!id) return alert('Cannot determine resume id');
+        if(!confirm('Delete this resume? This cannot be undone.')) return;
+        try{
+          const resp = await fetch(`/resumes/${id}/delete/`, { method:'POST', credentials:'same-origin', headers:{'X-CSRFToken': getCookie('csrftoken')} });
+          if(!resp.ok) throw new Error('Delete failed');
+          del.closest('li').remove();
+        }catch(err){ alert('Delete failed. Implement backend endpoint /resumes/<id>/delete/ to enable.'); }
+      }
+
+      const rename = e.target.closest('.rename-btn');
+      if(rename){
+        const id = rename.getAttribute('data-resume-id');
+        const newName = prompt('New name for resume:');
+        if(!newName) return;
+        try{
+          const resp = await fetch(`/resumes/${id}/rename/`, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken': getCookie('csrftoken')}, body: JSON.stringify({name:newName}) });
+          if(!resp.ok) throw new Error('Rename failed');
+          rename.closest('li').querySelector('div[style*="font-weight:700"]').textContent = newName;
+        }catch(err){ alert('Rename failed. Implement backend endpoint /resumes/<id>/rename/ to enable.'); }
+      }
+    });
+
+    // Avatar preview (client-only — actual upload requires backend handling)
+    if(avatarInput && avatarDisplay){
+      avatarInput.addEventListener('change', e => {
+        const f = e.target.files[0];
+        if(!f) return;
+        if(!f.type.startsWith('image/')){ alert('Please upload an image.'); return; }
+        const url = URL.createObjectURL(f);
+        avatarDisplay.innerHTML = '';
+        const img = document.createElement('img'); img.src = url; img.alt = '{{ user.get_full_name|default:user.username }} avatar'; img.onload = () => URL.revokeObjectURL(url);
+        avatarDisplay.appendChild(img);
+      });
+    }
+
+    // Accessibility: keyboard activation for file drop label
+    document.querySelectorAll('label.file-drop, label[for="avatar-input"]').forEach(lbl => {
+      lbl.addEventListener('keydown', ev => { if(ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); const input = lbl.querySelector('input[type=file]'); if(input) input.click(); } });
+    });
+
+    function getCookie(name){
+      const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+      return v ? v.pop() : '';
+    }
+
+  })();
+</script>
+
+{% endblock %}

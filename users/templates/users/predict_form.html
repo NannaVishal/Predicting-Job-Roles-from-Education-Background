@@ -1,0 +1,1154 @@
+﻿{% extends "base.html" %}
+{% block content %}
+{% load static %}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600,700,800&display=swap" rel="stylesheet">
+
+<style>
+  /* --- theme tokens --- */
+  :root {
+    --bg: #0b1220;
+    --panel: #0f1724;
+    --muted: #93a3b8;
+    --accent: #60a5fa;
+    --accent-2: #7c3aed;
+    --success: #34d399;
+    --danger: #fb7185;
+  }
+
+  /* minimal reset */
+  * {
+    box-sizing: border-box
+  }
+
+  body {
+    font-family: Inter, system-ui, Segoe UI, Roboto, Arial;
+    color: #e6eef8;
+    background: linear-gradient(180deg, var(--bg), #07101a);
+    margin: 0
+  }
+
+  /* container — give a bit more horizontal room so right column can be wider */
+  .container {
+    max-width: 1250px;
+    /* increased from 1100px */
+    margin: 28px auto;
+    padding: 20px;
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px
+  }
+
+  .header-row h2 {
+    margin: 0;
+    font-size: 22px;
+    color: #fff
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center
+  }
+
+  /* buttons */
+  .btn {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--accent);
+    color: #08203a;
+    border: 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(96, 165, 250, 0.08)
+  }
+
+  .btn.ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid rgba(96, 165, 250, 0.08);
+    box-shadow: none
+  }
+
+  .btn.secondary {
+    background: var(--accent-2);
+    color: white
+  }
+
+  .btn[disabled] {
+    opacity: .6;
+    cursor: not-allowed
+  }
+
+  /* card and layout */
+  /* two-column layout: left = form, right = result
+   widen the right column and move form visually left */
+  .grid-2 {
+    display: grid;
+    /* left column takes flexible space, right column fixed wider */
+    grid-template-columns: 1fr 540px;
+    /* was 1fr 420px */
+    gap: 24px;
+    /* slightly larger gap for breathing room */
+    align-items: start;
+    /* ensure both columns align to top */
+  }
+
+  @media(max-width:980px) {
+    .grid-2 {
+      grid-template-columns: 1fr;
+      gap: 16px
+    }
+  }
+
+  .card {
+    background: linear-gradient(180deg, var(--panel), #09101a);
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    box-shadow: 0 10px 40px rgba(2, 6, 23, 0.6)
+  }
+
+  /* ensure each column's card stretches and starts at top */
+  .grid-2>div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .grid-2>div>.card {
+    align-self: stretch;
+  }
+
+  /* Right-card specifics — ensure charts & content don't overflow */
+  .grid-2>div:nth-child(2) .card {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  /* ===== table-style fields ===== */
+  .form-table {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 14px 16px;
+    align-items: center;
+  }
+
+  .form-table label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .form-table input,
+  .form-table select,
+  .form-table textarea {
+    width: 100%;
+  }
+
+  @media(max-width:700px) {
+    .form-table {
+      grid-template-columns: 1fr;
+    }
+  }
+
+
+
+  /* two-column layout: left = form parts */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px
+  }
+
+  @media(max-width:840px) {
+    .form-grid {
+      grid-template-columns: 1fr
+    }
+  }
+
+  .small {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px
+  }
+
+  .form-input,
+  textarea,
+  select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: transparent;
+    color: #e6eef8;
+    font-size: 14px;
+    outline: none
+  }
+
+  .form-input::placeholder {
+    color: rgba(230, 238, 248, 0.28)
+  }
+
+  .form-row {
+    margin-bottom: 12px
+  }
+
+  /* upload box */
+  .upload-box {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+    border: 1px dashed rgba(255, 255, 255, 0.04);
+    cursor: pointer
+  }
+
+  .upload-box:hover {
+    border-color: rgba(96, 165, 250, 0.14)
+  }
+
+  .upload-drop {
+    flex: 0 0 90px;
+    height: 72px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted)
+  }
+
+  .upload-info {
+    flex: 1
+  }
+
+  .upload-hint {
+    color: var(--muted);
+    font-size: 13px
+  }
+
+  /* chip & suggestions */
+  .chip-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px
+  }
+
+  .chip {
+    background: rgba(96, 165, 250, 0.08);
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--accent);
+    border: 1px solid rgba(96, 165, 250, 0.12)
+  }
+
+  /* result & history */
+  .result-box {
+    margin-top: 0;
+    padding: 12px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+    border: 1px solid rgba(255, 255, 255, 0.03)
+  }
+
+  .result-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center
+  }
+
+  .confidence-value {
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 8px
+  }
+
+  .top-list {
+    margin-top: 12px;
+    color: #dbeafe
+  }
+
+  .top-list ol {
+    margin: 8px 0 0 20px;
+    color: #cfe9ff
+  }
+
+  .history-box {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+    border: 1px solid rgba(255, 255, 255, 0.02)
+  }
+
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.01)
+  }
+
+  /* preview modal (updated look) */
+  .preview-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.68), rgba(2, 6, 23, 0.44));
+    z-index: 9999;
+    padding: 24px;
+  }
+
+  .preview-card {
+    width: min(980px, 96%);
+    max-height: 86vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #07101a, #0b1220);
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    box-shadow: 0 18px 48px rgba(2, 6, 23, 0.7);
+    color: #e6eef8;
+    backdrop-filter: blur(6px) saturate(120%);
+  }
+
+  /* header */
+  .pc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 12px
+  }
+
+  .pc-head h3 {
+    margin: 0;
+    font-size: 20px
+  }
+
+  .pc-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px
+  }
+
+  /* body: two-column preview layout */
+  .pc-body {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    flex: 1 1 auto;
+    overflow: auto;
+    padding-right: 8px
+  }
+
+  .pc-col {
+    flex: 1 1 0;
+    min-width: 220px;
+    padding-right: 8px
+  }
+
+  .pc-col.right {
+    flex: 1 1 0;
+    min-width: 240px;
+    border-left: 1px solid rgba(255, 255, 255, 0.02);
+    padding-left: 20px
+  }
+
+  @media(max-width:920px) {
+    .pc-body {
+      flex-direction: column
+    }
+
+    .pc-col.right {
+      border-left: none;
+      padding-left: 0
+    }
+  }
+
+  .kv {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02)
+  }
+
+  .kv b {
+    width: 160px;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 13px
+  }
+
+  .kv .pv-val {
+    color: #e6eef8;
+    font-size: 14px;
+    word-break: break-word
+  }
+
+  /* footer buttons */
+  .pc-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 14px
+  }
+
+  .pc-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 0
+  }
+
+  .pc-btn.ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid rgba(96, 165, 250, 0.08)
+  }
+
+  .pc-btn.primary {
+    background: var(--accent);
+    color: #08203a
+  }
+
+  .close-small {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer
+  }
+
+  /* toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #071220;
+    color: #e6eef8;
+    padding: 12px 14px;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
+    border: 1px solid rgba(96, 165, 250, 0.06);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all .28s
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: none
+  }
+
+  /* charts: responsive */
+  #confidenceChart,
+  #breakdownPie {
+    max-width: 100%;
+    width: 100%;
+    height: 220px;
+    display: block;
+    margin: 8px 0;
+  }
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container">
+  <div class="header-row">
+    <h2>Prediction</h2>
+    <div class="header-actions">
+      <a class="btn ghost" href="{% url 'users:dashboard' %}">Dashboard</a>
+      <button id="preview-open-btn" class="btn">Preview</button>
+    </div>
+  </div>
+
+
+
+  <div>
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div><strong style="font-size:16px">Upload Resume</strong>
+          <div class="upload-hint small">PDF or DOCX — we will extract skills & details and auto-predict</div>
+        </div>
+        <div style="width:220px;text-align:right">
+          <button id="clear-resume" class="btn ghost" type="button" style="display:none">Remove</button>
+        </div>
+      </div>
+
+      <label id="upload-dropzone" class="upload-box" for="resume-input" tabindex="0"
+        title="Click to upload or drag-and-drop">
+        <div class="upload-drop">📄</div>
+        <div class="upload-info">
+          <div id="upload-filename" style="font-weight:600">No file selected</div>
+          <div class="upload-hint">Drag & drop or click to choose a PDF / DOCX resume</div>
+        </div>
+      </label>
+
+      <input id="resume-input" name="resume" type="file" accept=".pdf,.docx" style="display:none" />
+
+      <div id="resume-preview" style="margin-top:12px;display:none">
+        <div class="small" style="margin-bottom:6px">Extracted summary</div>
+        <div style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;color:#dbeafe" id="resume-extract">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <form id="predict-form" method="post" novalidate action="{% url 'users:predict' %}">
+        {% csrf_token %}
+
+        <div class="form-grid">
+          
+          <div>
+
+            {% if form.education %}
+            <div class="form-row">
+              <label class="small" for="{{ form.education.id_for_label }}">Education</label>
+              {{ form.education }}
+            </div>
+            {% endif %}
+
+            {% if form.skills %}
+            <div class="form-row">
+              <label class="small" for="{{ form.skills.id_for_label }}">Skills</label>
+              {{ form.skills }}
+              <div id="chip-preview" class="chip-box"></div>
+              <div class="suggestions" id="skill-suggestions"></div>
+            </div>
+            {% endif %}
+
+            <!-- ===== TABLE STYLE INPUTS (NEW) ===== -->
+            <div class="form-table">
+
+              <label for="{{ form.degree.id_for_label }}">Degree</label>
+              {{ form.degree }}
+
+              <label for="{{ form.major.id_for_label }}">Major</label>
+              {{ form.major }}
+
+              <label for="{{ form.specialization.id_for_label }}">Specialization</label>
+              {{ form.specialization }}
+
+              <label for="{{ form.cgpa.id_for_label }}">CGPA</label>
+              {{ form.cgpa }}
+
+              <label for="{{ form.certification.id_for_label }}">Certification</label>
+              {{ form.certification }}
+
+              <label for="{{ form.experience_years.id_for_label }}">Experience (years)</label>
+              {{ form.experience }}
+
+              <label for="{{ form.industry.id_for_label }}">Industry</label>
+              {{ form.industry }}
+
+            </div>
+
+            <!-- ===== END TABLE STYLE INPUTS ===== -->
+
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div>
+
+            {% if form.current_company %}
+            <div class="form-row">
+              <label class="small" for="{{ form.current_company.id_for_label }}">Current company</label>
+              {{ form.current_company }}
+            </div>
+            {% endif %}
+
+            {% if form.location %}
+            <div class="form-row">
+              <label class="small" for="{{ form.location.id_for_label }}">Location</label>
+              {{ form.location }}
+            </div>
+            {% endif %}
+
+            {% if form.additional_info %}
+            <div class="form-row">
+              <label class="small" for="{{ form.additional_info.id_for_label }}">Additional notes</label>
+              {{ form.additional_info }}
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+          <button id="submit-btn" type="submit" class="btn">
+            <span id="submit-spinner" class="spinner" style="display:none"></span>
+            <span id="submit-text">Predict & Save</span>
+          </button>
+
+          <button id="preview-form-btn" type="button" class="btn ghost">
+            Open Preview
+          </button>
+
+          <a href="{% url 'users:profile' %}" class="btn ghost" style="color:#cbd5e1">
+            Back to profile
+          </a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <div>
+    <div class="card" style="width: max-content;">
+      <h4 style="margin:0 0 8px 0">Prediction</h4>
+      <!-- server-rendered result (if any) will appear here; otherwise an empty placeholder div exists so AJAX can replace it -->
+      {% if prediction %}
+      <div class="result-box" id="result-box">
+        <div class="result-title">
+          <strong>Model output</strong>
+        </div>
+
+        <!-- 1) Breakdown pie (first) -->
+        <div style="margin-top:10px;">
+          <canvas id="breakdownPie" style="max-width:100%; margin-top:4px"></canvas>
+        </div>
+
+        <!-- 2) Confidence gauge (doughnut) -->
+        <div style="margin-top:10px;">
+          <canvas id="confidenceChart" style="max-width:100%; margin-top:4px"></canvas>
+        </div>
+
+        <!-- 3) Numeric probability (confidence) -->
+        <div class="confidence-value" style="margin-top:8px">Confidence: <span id="conf-val">{{
+            prediction_confidence|default:0 }}</span>%</div>
+
+        <!-- 4) Top predictions (top 5) -->
+        {% if prediction_list %}
+        <div class="top-list">
+          <strong>Top predictions</strong>
+          <ol>
+            {% for label, score in prediction_list %}
+            <li><span style="font-weight:600">{{ label }}</span>{% if score %} — <span style="color:var(--accent)">{{
+                score }}%</span>{% endif %}</li>
+            {% endfor %}
+          </ol>
+        </div>
+        {% endif %}
+
+        <!-- 5) Prediction text (final) -->
+        <pre style="margin-top:12px; white-space:pre-wrap;color:#dbeafe">{{ prediction|safe }}</pre>
+
+        {% if prediction_breakdown_json %}
+        <script type="application/json" id="prediction-breakdown-data">{{ prediction_breakdown_json|safe }}</script>
+        {% endif %}
+      </div>
+      {% else %}
+      <div id="result-box"></div>
+      <div class="small" style="margin-top:10px;color:var(--muted)">No prediction yet — submit the form to see results
+        here.</div>
+      {% endif %}
+    </div>
+  </div>
+
+
+  <!-- Prediction history moved to bottom (full-width) -->
+  <div class="card" style="margin-top:18px">
+    <h4 style="margin:0 0 8px 0">Prediction History</h4>
+
+    <div class="history-box" id="prediction-history">
+      {% if history %}
+
+      {% for h in history %}
+      <div class="history-item">
+        <div>
+          <div style="font-weight:700;color:#cfe9ff">
+            {{ h.predicted_role }}
+          </div>
+
+          <div class="small" style="color:var(--muted)">
+            {{ h.created_at|date:"d M, Y H:i" }}
+          </div>
+
+          {% if h.skills %}
+          <div class="small" style="margin-top:6px;color:var(--muted)">
+            Skills: {{ h.skills }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div style="text-align:right">
+          {% if h.probability %}
+          <div style="color:var(--accent);font-weight:700">
+            {{ h.probability }}%
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+      {% else %}
+      <div class="small" style="color:var(--muted)">
+        No predictions yet — they will appear here.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Updated Preview modal: two columns (academics left, job details right) ===== -->
+<div id="preview-modal" class="preview-modal" role="dialog" aria-hidden="true" aria-labelledby="preview-title">
+  <div class="preview-card" role="document">
+    <div class="pc-head">
+      <div>
+        <h3 id="preview-title">Preview submission</h3>
+        <div class="pc-sub">Review these details before saving — editable fields will be preserved.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="close-preview" class="close-small" type="button">Close</button>
+      </div>
+    </div>
+
+    <div class="pc-body">
+      <!-- LEFT: Academics -->
+      <div class="pc-col left">
+        <div class="kv"><b>Degree</b>
+          <div id="pv-degree" class="pv-val">—</div>
+        </div>
+        <div class="kv"><b>Major</b>
+          <div id="pv-major" class="pv-val">—</div>
+        </div>
+        <div class="kv"><b>Specialization</b>
+          <div id="pv-specialization" class="pv-val">—</div>
+        </div>
+        <div class="kv"><b>CGPA</b>
+          <div id="pv-cgpa" class="pv-val">—</div>
+        </div>
+        <div class="kv"><b>Certification</b>
+          <div id="pv-certification" class="pv-val">—</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Job details -->
+      <div class="pc-col right">
+        <div class="kv"><b>Skills</b>
+          <div id="pv-skills" class="pv-val">—</div>
+        </div>
+        <div class="kv"><b>Experience (years)</b>
+          <div id="pv-experience_years" class="pv-val">—</div>
+        </div>
+        <div class="kv"><b>Location</b>
+          <div id="pv-location" class="pv-val">—</div>
+        </div>
+        <div class="kv"><b>Industry</b>
+          <div id="pv-industry" class="pv-val">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pc-footer">
+      <button id="edit-back" class="pc-btn ghost" type="button">Edit</button>
+      <button id="submit-from-preview" class="pc-btn primary" type="button">Submit & Save</button>
+    </div>
+  </div>
+</div>
+<!-- ===== End preview modal ===== -->
+
+<div id="toast" class="toast"></div>
+
+<script>
+  /* small helpers */
+  function qs(s, r = document) { return r.querySelector(s) }
+  function qsa(s, r = document) { return Array.from((r || document).querySelectorAll(s)) }
+
+  /* ---------- Resume upload UX & AJAX ---------- */
+  const resumeInput = qs('#resume-input');
+  const uploadZone = qs('#upload-dropzone');
+  const uploadFilename = qs('#upload-filename');
+  const resumePreview = qs('#resume-preview');
+  const resumeExtractEl = qs('#resume-extract');
+  const clearResumeBtn = qs('#clear-resume');
+
+  if (uploadZone) {
+    uploadZone.addEventListener('click', () => resumeInput.click());
+    uploadZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') resumeInput.click(); });
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = 'rgba(96,165,250,0.18)'; })
+    uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = 'transparent' })
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = 'transparent';
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) { resumeInput.files = e.dataTransfer.files; onResumeSelected(f); }
+    });
+  }
+
+  resumeInput?.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) onResumeSelected(f);
+  });
+
+  function getCSRF() {
+    const el = document.querySelector('[name="csrfmiddlewaretoken"]');
+    return el ? el.value : '';
+  }
+
+  function onResumeSelected(file) {
+    uploadFilename.textContent = file.name;
+    resumePreview.style.display = 'block';
+    resumeExtractEl.textContent = 'Extracting…';
+    clearResumeBtn.style.display = 'inline-block';
+
+    // build FormData and POST to resume_predict endpoint (include CSRF header)
+    const fd = new FormData();
+    fd.append('resume', file);
+    const url = "{% url 'users:resume_predict' %}";
+    fetch(url, {
+      method: 'POST',
+      body: fd,
+      credentials: 'same-origin',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': getCSRF()
+      }
+    })
+      .then(async r => {
+        if (!r.ok) {
+          const txt = await r.text();
+          showToast('Resume upload failed');
+          console.error('resume upload failed', r.status, txt);
+          throw new Error('upload failed');
+        }
+        return r.json();
+      })
+      .then(data => {
+        // display extracted summary & autofill form fields where possible
+        const auto = data.auto_fill || {};
+        const snippet = data.resume_text_snippet || '';
+        let summary = '';
+        if (auto.Degree) summary += 'Degree: ' + auto.Degree + '\n';
+        if (auto.Major) summary += 'Major: ' + auto.Major + '\n';
+        if (auto['Years of Experience']) summary += 'Experience: ' + auto['Years of Experience'] + ' years\n';
+        if (auto.Skills) summary += 'Skills: ' + auto.Skills + '\n';
+        if (auto.Certification) summary += 'Certifications: ' + auto.Certification + '\n';
+        if (auto['Job Titles']) summary += 'Titles: ' + auto['Job Titles'] + '\n';
+        if (auto.Projects) summary += 'Projects: ' + (auto.Projects || '') + '\n';
+        if (!summary) summary = snippet.slice(0, 1200);
+        resumeExtractEl.textContent = summary;
+
+        // try to auto-fill fields
+        try {
+          const form = qs('#predict-form');
+          if (auto.Skills && qs('[name="skills"]', form)) { qs('[name="skills"]', form).value = auto.Skills; qs('[name="skills"]', form).dispatchEvent(new Event('input')); }
+          if (auto.Degree && qs('[name="degree"]', form)) { qs('[name="degree"]', form).value = auto.Degree; }
+          if (auto.Major && qs('[name="major"]', form)) { qs('[name="major"]', form).value = auto.Major; }
+          if (auto['Years of Experience'] && qs('[name="experience"]', form)) { qs('[name="experience"]', form).value = auto['Years of Experience']; }
+        } catch (e) { console.warn('autofill failed', e) }
+
+        showToast('Resume processed — form auto-filled (you can edit before saving)');
+      })
+      .catch(err => { console.error(err); resumeExtractEl.textContent = 'Failed to extract resume.'; });
+  }
+
+  clearResumeBtn?.addEventListener('click', () => {
+    resumeInput.value = '';
+    uploadFilename.textContent = 'No file selected';
+    resumePreview.style.display = 'none';
+    resumeExtractEl.textContent = '';
+    clearResumeBtn.style.display = 'none';
+  });
+
+  /* ---------- Preview modal (reusable) ---------- */
+  function readFormValues(formEl) {
+    const values = {};
+    qsa('input[name], textarea[name], select[name]', formEl).forEach(el => {
+      const name = el.name; if (!name) return;
+      let val = null;
+      if (el.type === 'checkbox') { val = el.checked; }
+      else if (el.type === 'radio') { if (el.checked) val = el.value; else if (values[name] === undefined) val = null; }
+      else { val = el.value; }
+      if (values[name] === undefined) values[name] = val;
+      else if (Array.isArray(values[name])) values[name].push(val);
+      else if (val !== null) values[name] = [values[name], val];
+    });
+    return values;
+  }
+
+  function populatePreview(values) {
+    const fields = [
+      'education', 'degree', 'major', 'specialization', 'cgpa', 'certification',
+      'skills', 'experience_years', 'current_company', 'location', 'industry'
+    ];
+    fields.forEach(k => {
+      const el = qs('#pv-' + k);
+      if (el) el.textContent = values[k] || '—';
+    });
+  }
+
+  function openPreview() { const form = qs('#predict-form'); populatePreview(readFormValues(form)); qs('#preview-modal').style.display = 'flex'; qs('#preview-modal').setAttribute('aria-hidden', 'false'); document.addEventListener('keydown', previewEscHandler); }
+  function closePreview() { qs('#preview-modal').style.display = 'none'; qs('#preview-modal').setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', previewEscHandler); }
+  function previewEscHandler(e) { if (e.key === 'Escape') closePreview(); }
+
+  qs('#preview-open-btn')?.addEventListener('click', openPreview);
+  qs('#preview-form-btn')?.addEventListener('click', openPreview);
+  qs('#close-preview')?.addEventListener('click', closePreview);
+  qs('#edit-back')?.addEventListener('click', closePreview);
+
+  /* Submit from preview — triggers normal submit (bypasses AJAX) */
+  qs('#submit-from-preview')?.addEventListener('click', function (e) {
+    const form = qs('#predict-form');
+    if (!form) { console.warn('predict-form not found'); return; }
+    form.dataset.noAjax = '1';  // your AJAX handler respects this flag
+    closePreview();
+    form.submit();
+  });
+
+  /* ---------- Autosave + chips + AJAX submit (keeps your existing behavior) ---------- */
+  (function () {
+    // autosave
+    const FORM_KEY = 'predict_form_draft_v1';
+    const form = qs('#predict-form');
+    try {
+      const raw = localStorage.getItem(FORM_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        Object.entries(data).forEach(([k, v]) => {
+          const el = qsa(`[name="${k}"]`, form)[0];
+          if (!el) return;
+          if (el.type === 'checkbox') el.checked = Boolean(v); else el.value = v;
+          el.dispatchEvent(new Event('input'));
+        });
+        showToast('Draft restored');
+      }
+    } catch (e) { }
+
+    form?.addEventListener('input', () => {
+      const data = readFormValues(form);
+      try { localStorage.setItem(FORM_KEY, JSON.stringify(data)); } catch (e) { }
+    });
+    form?.addEventListener('submit', () => { try { localStorage.removeItem(FORM_KEY) } catch (e) { } });
+
+    // simple skill chips
+    (function () {
+      const skillInput = qs('[name="skills"]');
+      const chipsBox = qs('#chip-preview');
+      const suggestionsBox = qs('#skill-suggestions');
+      const SUGGESTIONS = ['Python', 'Django', 'React', 'Machine Learning', 'Data Analysis', 'SQL', 'AWS', 'Docker', 'Kubernetes', 'Node.js'];
+      function renderChips(val) {
+        if (!chipsBox) return;
+        chipsBox.innerHTML = '';
+        if (!val) return;
+        const arr = val.split(',').map(s => s.trim()).filter(Boolean);
+        arr.forEach(s => { const d = document.createElement('div'); d.className = 'chip'; d.textContent = s; chipsBox.appendChild(d) });
+      }
+      function renderSuggestions(val) {
+        if (!suggestionsBox) return;
+        suggestionsBox.innerHTML = '';
+        const q = (val || '').toLowerCase();
+        SUGGESTIONS.filter(s => s.toLowerCase().includes(q) && !(val || '').toLowerCase().split(',').map(x => x.trim()).includes(s.toLowerCase()))
+          .slice(0, 6).forEach(s => {
+            const b = document.createElement('button'); b.type = 'button'; b.className = 'suggestion'; b.textContent = s;
+            b.onclick = () => { skillInput.value = skillInput.value ? skillInput.value + ', ' + s : s; skillInput.dispatchEvent(new Event('input')) };
+            suggestionsBox.appendChild(b);
+          });
+      }
+      if (skillInput) {
+        skillInput.addEventListener('input', e => { renderChips(e.target.value); renderSuggestions(e.target.value); });
+        setTimeout(() => { renderChips(skillInput.value); renderSuggestions(skillInput.value); }, 40);
+      }
+    })();
+
+    // AJAX submit
+    const submitBtn = qs('#submit-btn');
+    const submitSpinner = qs('#submit-spinner');
+    const submitText = qs('#submit-text');
+
+    form?.addEventListener('submit', function (e) {
+      // allow normal submit if form.dataset.noAjax is set (used by preview submit)
+      const noAjax = form.dataset && form.dataset.noAjax === '1';
+      if (noAjax) { delete form.dataset.noAjax; return; }
+
+      e.preventDefault();
+      if (submitBtn) { submitBtn.disabled = true; if (submitSpinner) submitSpinner.style.display = 'inline-block'; if (submitText) submitText.textContent = 'Predicting…' }
+
+      const fd = new FormData(form);
+      fetch(form.getAttribute('action') || window.location.href, {
+        method: 'POST', body: fd, credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCSRF() }
+      })
+        .then(async r => {
+          const text = await r.text();
+          if (!r.ok) { console.error('Predict request failed', r.status, text); showToast('Prediction failed (server).'); return Promise.reject(new Error('server')); }
+          return text;
+        })
+        .then(html => {
+          try {
+            const tmp = document.createElement('div'); tmp.innerHTML = html;
+            const incoming = tmp.querySelector('#result-box') || tmp.querySelector('.result-box');
+            const incomingHistory = tmp.querySelector('#prediction-history');
+            const current = document.querySelector('#result-box');
+            const currentHistory = document.querySelector('#prediction-history');
+
+            if (incoming) {
+              if (current) current.replaceWith(incoming); else {
+                // fallback: insert into right card if placeholder missing
+                const rightCard = qs('.grid-2 > div:nth-child(2) .card');
+                if (rightCard) rightCard.appendChild(incoming);
+                else form.insertAdjacentElement('afterend', incoming);
+              }
+              // execute inline scripts
+              (incoming.querySelectorAll('script') || []).forEach(s => { const ns = document.createElement('script'); ns.text = s.textContent; document.body.appendChild(ns); });
+              try { window.initCharts && window.initCharts(); } catch (e) { }
+            }
+            if (incomingHistory) {
+              if (currentHistory) currentHistory.replaceWith(incomingHistory);
+              else {
+                const wrapper = qs('#prediction-history');
+                if (wrapper) { wrapper.parentNode.replaceChild(incomingHistory, wrapper); }
+              }
+            }
+            if (!incoming && !incomingHistory) {
+              const bodyIncoming = tmp.querySelector('body');
+              if (bodyIncoming) { document.body.innerHTML = bodyIncoming.innerHTML; }
+              else { showToast('No prediction returned (unexpected response)'); console.warn('AJAX predict: no result-box found', tmp); }
+            } else {
+              showToast('Prediction updated');
+            }
+          } catch (e) {
+            console.error('failed to inject response', e); showToast('Prediction failed to display');
+          }
+        })
+        .catch(err => { console.error('Predict fetch failed', err); showToast('Network/server error while predicting.') })
+        .finally(() => { if (submitBtn) { submitBtn.disabled = false; if (submitSpinner) submitSpinner.style.display = 'none'; if (submitText) submitText.textContent = 'Predict & Save' } });
+    });
+
+  })(); // end autosave/IIFE
+
+  function showToast(msg, ms = 2200) { const t = qs('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), ms); }
+</script>
+
+<!-- ===== charts initialization: confidence gauge (doughnut) + breakdown pie ===== -->
+<script>
+  /* initialize confidence doughnut + breakdown pie (called by AJAX and on load) */
+  window.initCharts = function () {
+    // cleanup if re-initializing
+    try { window._confChart && window._confChart.destroy(); } catch (e) { }
+    try { window._breakdownChart && window._breakdownChart.destroy(); } catch (e) { }
+
+    const confEl = document.getElementById('confidenceChart');
+    const pieEl = document.getElementById('breakdownPie');
+    const dataEl = document.getElementById('prediction-breakdown-data');
+
+    // read numeric confidence (falls back to 0)
+    const confTxt = (document.getElementById('conf-val') && document.getElementById('conf-val').textContent) || '0';
+    const confVal = Math.max(0, Math.min(100, Number(confTxt) || 0));
+
+    // draw breakdown pie first (if JSON exists)
+    if (pieEl && dataEl && dataEl.textContent.trim()) {
+      try {
+        const breakdown = JSON.parse(dataEl.textContent || '{}');
+
+        // If breakdown is an object mapping labels->values
+        let labels = [], values = [];
+        if (breakdown && typeof breakdown === 'object' && !Array.isArray(breakdown)) {
+          labels = Object.keys(breakdown);
+          values = labels.map(l => Number(breakdown[l] || 0));
+        } else if (Array.isArray(breakdown)) {
+          labels = breakdown.map((_, i) => 'Item ' + (i + 1));
+          values = breakdown.map(v => Number(v || 0));
+        } else {
+          // fallback: single numeric value
+          labels = ['A', 'B'];
+          values = [Number(breakdown) || 0, 100 - (Number(breakdown) || 0)];
+        }
+
+        // generate simple HSL palette for slices
+        const bg = labels.map((_, i) => `hsl(${(i * 52) % 360} 70% 55%)`);
+
+        window._breakdownChart = new Chart(pieEl, {
+          type: 'pie',
+          data: { labels: labels, datasets: [{ data: values, backgroundColor: bg, borderWidth: 0 }] },
+          options: {
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8 } } },
+            maintainAspectRatio: false,
+            animation: { duration: 600 }
+          }
+        });
+      } catch (err) {
+        console.warn('Failed to parse prediction-breakdown-data JSON', err);
+      }
+    }
+
+    // draw confidence gauge (doughnut) after pie
+    if (confEl) {
+      const accent = (getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#60a5fa').trim() || '#60a5fa';
+      const confData = {
+        labels: ['Confidence', 'Remaining'],
+        datasets: [{
+          data: [confVal, Math.max(0, 100 - confVal)],
+          backgroundColor: [accent, 'rgba(255,255,255,0.06)'],
+          borderWidth: 0,
+        }]
+      };
+
+      const confOptions = {
+        cutout: '70%',
+        rotation: -90 * (Math.PI / 180),
+        circumference: 180 * (Math.PI / 180),
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        animation: { duration: 600 },
+        maintainAspectRatio: false,
+        // custom plugin to draw center text
+        plugins: [{
+          id: 'confCenterText',
+          afterDraw: chart => {
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return;
+            ctx.save();
+            const centerX = (chartArea.left + chartArea.right) / 2;
+            const centerY = (chartArea.top + chartArea.bottom) / 1.06; // slightly lower
+            ctx.fillStyle = accent;
+            ctx.font = '700 18px Inter, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(Math.round(confVal) + '%', centerX, centerY);
+            ctx.restore();
+          }
+        }]
+      };
+
+      window._confChart = new Chart(confEl, { type: 'doughnut', data: confData, options: confOptions });
+    }
+  };
+
+  // try to init charts on first load (AJAX responses also call window.initCharts)
+  document.addEventListener('DOMContentLoaded', () => {
+    try { window.initCharts(); } catch (e) { console.warn('initCharts failed', e); }
+  });
+</script>
+
+{% endblock %}

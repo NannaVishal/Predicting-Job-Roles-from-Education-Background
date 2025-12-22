@@ -1,0 +1,29 @@
+# users/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # ---------- Auth ----------
+    path('register/', views.register_view, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
+    # ---------- Dashboard ----------
+    path('dashboard/', views.dashboard, name='dashboard'),
+
+    # ---------- ML Endpoints ----------
+    path('api/predict/', views.predict_api, name='predict_api'),
+    path('api/resume-predict/', views.resume_predict, name='resume_predict'),
+    path('upload-dataset/', views.upload_dataset, name='upload_dataset'),
+
+    # ---------- Profile ----------
+    path('profile/', views.profile_view, name='profile'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('profile/upload-resume/', views.upload_resume, name='upload_resume'),
+
+    # ---------- Predict Pages ----------
+    path('profile/predict/', views.predict_from_details, name='predict_from'),
+
+    # This is needed because your templates call {% url 'predict_form' %}
+    path('predict/', views.predict_from_details, name='predict_form'),
+]

@@ -1,0 +1,116 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{% block title %}My Site{% endblock %}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+
+  <style>
+    /* header sizing and fixed behaviour */
+    :root {
+      --header-bg: #1e2633;
+      --header-text: #ffffff;
+      --header-height: 64px;         /* change if you want a taller/shorter header */
+      --header-z: 9999;
+      --header-shadow: 0 6px 20px rgba(2,6,23,0.5);
+    }
+
+    /* make header fixed */
+    header.site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: var(--header-bg);
+      color: var(--header-text);
+      z-index: var(--header-z);
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      transition: box-shadow 180ms ease, backdrop-filter 180ms ease;
+      padding: 0 16px;
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px); /* subtle blur on browsers that support it */
+    }
+
+    /* inner container to control content width */
+    header.site-header .container {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* small adjustments to text and links inside header */
+    header.site-header a { color: var(--header-text); text-decoration: none; }
+    header.site-header .brand { font-weight: 700; letter-spacing: -0.2px; }
+    header.site-header .meta { font-size: 0.95rem; }
+
+    /* shadow state applied when page is scrolled */
+    header.site-header.scrolled {
+      box-shadow: var(--header-shadow);
+    }
+
+    /* make sure main content sits below the fixed header */
+    main.site-main {
+      max-width: 1100px;
+      margin: calc(var(--header-height) + 20px) auto 20px; /* top margin equals header height + spacing */
+      padding: 0 16px;
+      box-sizing: border-box;
+    }
+
+    /* responsive tweaks */
+    @media (max-width:640px) {
+      :root { --header-height: 56px; }
+      header.site-header { padding: 0 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" role="banner" aria-label="Site header">
+    <div class="container">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a class="brand" href="{% url 'users:dashboard' %}">Job Role Prediction</a>
+      </div>
+
+      <div class="meta" style="text-align:right">
+        {% if user.is_authenticated %}
+          <span>welcome {{ user.username }}</span> &nbsp;|&nbsp;
+          <a href="{% url 'users:logout' %}">Logout</a>
+        {% else %}
+          <a href="{% url 'users:login' %}">Login</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block extra_scripts %}{% endblock %}
+
+  <script>
+    // add/remove .scrolled class to header for shadow effect
+    (function() {
+      const header = document.querySelector('header.site-header');
+      if (!header) return;
+
+      function onScroll() {
+        if (window.scrollY > 8) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      // run once in case the page loads scrolled
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

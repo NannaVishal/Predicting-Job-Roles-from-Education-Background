@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:720px;margin:20px auto;padding:18px;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+  <h2>Upload Resume</h2>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    <p>
+      {{ form.resume.label_tag }}<br>
+      {{ form.resume }}
+      {% if form.resume.errors %}
+        <div class="error">{{ form.resume.errors }}</div>
+      {% endif %}
+    </p>
+
+    <p>
+      <button type="submit">Upload & Process Resume</button>
+      <a href="{% url 'profile' %}" style="margin-left:12px">Back to profile</a>
+    </p>
+  </form>
+
+  {% if profile and profile.predicted_role %}
+    <hr>
+    <h3>Saved Prediction</h3>
+    <div>
+      <strong>Role:</strong> {{ profile.predicted_role }}
+      {% if profile.predicted_confidence %} — <strong>Confidence:</strong> {{ profile.predicted_confidence }}{% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

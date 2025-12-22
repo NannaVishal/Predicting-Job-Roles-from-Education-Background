@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+{% block content %}
+
+<style>
+  :root{
+    --bg:#050912;
+    --panel:#0f1724;
+    --text:#e6eef8;
+    --muted:#94a3b8;
+    --accent:#3b82f6;
+    --border:rgba(255,255,255,0.08);
+  }
+
+  /* FULL PAGE DARK BACKGROUND */
+  body{
+    background:linear-gradient(180deg, var(--bg), #0a1322) !important;
+    margin:0;
+    padding:0;
+    color:var(--text);
+    font-family:Inter,system-ui;
+  }
+
+  .edit-box{
+    max-width:700px;
+    margin:40px auto;
+    padding:24px;
+    background:linear-gradient(180deg, var(--panel), #091426);
+    border-radius:12px;
+    box-shadow:0 16px 50px rgba(0,0,0,0.7);
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+
+  h2{margin:0 0 10px 0;font-size:1.4rem;font-weight:800;}
+  hr{border-color:var(--border);margin-bottom:16px}
+
+  label{color:var(--text);font-weight:600}
+  input,textarea,select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    margin-bottom:12px;
+  }
+  input:focus,textarea:focus,select:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(59,130,246,0.3);
+  }
+
+  button{
+    padding:10px 16px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    font-weight:700;
+  }
+
+  .btn-save{
+    background:var(--accent);
+    color:#fff;
+  }
+
+  .btn-back{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--border);
+    margin-top:10px;
+  }
+</style>
+
+<div class="edit-box">
+  <h2>Edit Profile</h2>
+  <hr>
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit" class="btn-save">Save Changes</button>
+  </form>
+
+  <a href="{% url 'profile' %}">
+    <button class="btn-back">Back</button>
+  </a>
+</div>
+
+{% endblock %}

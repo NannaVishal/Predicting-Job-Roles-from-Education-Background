@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login — Job Portal</title>
+  <style>
+  :root {
+    /* Multi-Dark Neon Theme */
+    --bg1: #0d0f1a;
+    --bg2: #101624;
+    --bg3: #1d2640;
+
+    --panel: rgba(20,26,40,0.75);
+    --panel-light: rgba(255,255,255,0.06);
+
+    --accent: #6366f1;     /* Indigo */
+    --accent-2: #06b6d4;   /* Cyan */
+    --accent-3: #a855f7;   /* Purple */
+
+    --muted: #94a3b8;
+    --success: #10b981;
+    --danger: #ef4444;
+
+    --radius: 14px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 600px at 10% 20%, rgba(99,102,241,0.20), transparent),
+      radial-gradient(800px 600px at 80% 80%, rgba(6,182,212,0.18), transparent),
+      linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+    color:#e2e8f0;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+  }
+
+  /* CARD */
+  .card{
+    width:100%;
+    max-width:980px;
+    background:var(--panel);
+    backdrop-filter: blur(18px);
+    border-radius:var(--radius);
+    box-shadow:0 0 40px rgba(0,0,0,0.4);
+    padding:28px;
+    display:grid;
+    grid-template-columns:420px 1fr;
+    gap:24px;
+    border:1px solid rgba(255,255,255,0.05);
+  }
+
+  /* LEFT SECTION */
+  .left{
+    padding:22px;
+    background:rgba(255,255,255,0.03);
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .brand{
+    display:flex;gap:12px;align-items:center;margin-bottom:18px;
+  }
+  .logo{
+    width:46px;height:46px;border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2), var(--accent-3));
+    display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;
+    box-shadow:0 0 12px rgba(99,102,241,0.5);
+    font-size:16px;
+  }
+  h1{margin:0;font-size:20px;color:white;}
+  p.lead{margin-top:6px;margin-bottom:18px;color:var(--muted);font-size:13px;}
+
+  form{display:flex;flex-direction:column;gap:14px;}
+  label{font-size:13px;color:var(--muted);margin-bottom:6px;}
+
+  /* INPUT */
+  .input{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    padding:12px 14px;
+    border-radius:10px;
+    display:flex;align-items:center;gap:10px;
+    transition:0.16s ease;
+  }
+  .input:hover{
+    border-color:rgba(255,255,255,0.3);
+  }
+  .input:focus-within{
+    border-color:var(--accent-2);
+    box-shadow:0 0 12px rgba(6,182,212,0.6);
+  }
+  .input input{
+    background:transparent;border:0;outline:none;font-size:14px;color:white;
+    flex:1;
+  }
+  .muted{color:var(--muted);}
+
+  /* BUTTONS */
+  .row{display:flex;gap:12px;}
+  .btn{
+    padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600;
+    background:linear-gradient(90deg, var(--accent), var(--accent-3));
+    color:white;
+    box-shadow:0 0 16px rgba(99,102,241,0.4);
+    transition:0.2s;
+  }
+  .btn:hover{
+    box-shadow:0 0 22px rgba(168,85,247,0.7);
+    transform:translateY(-2px);
+  }
+  .btn.ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.15);
+    color:#cbd5e1;
+  }
+  .btn.ghost:hover{
+    border-color:var(--accent);
+    box-shadow:0 0 16px rgba(99,102,241,0.4);
+  }
+
+  /* RIGHT PANEL */
+  .right{
+    padding:28px;border-radius:10px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .right h3{margin:0;font-size:18px;color:white;}
+  .features{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:8px;
+  }
+  .feature{
+    background:rgba(255,255,255,0.06);
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.1);
+    padding:12px;
+    display:flex;gap:10px;align-items:center;
+    transition:0.18s;
+  }
+  .feature:hover{
+    border-color:var(--accent-2);
+    box-shadow:0 0 14px rgba(6,182,212,0.5);
+  }
+
+  .small{color:var(--muted);font-size:13px;}
+
+  /* SOCIAL BUTTONS */
+  .socials{display:flex;gap:10px;margin-top:10px;}
+  .social{
+    flex:1;padding:10px;border-radius:10px;
+    border:1px solid rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.03);
+    display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+    transition:0.2s;
+  }
+  .social:hover{
+    box-shadow:0 0 18px rgba(99,102,241,0.5);
+    border-color:var(--accent);
+  }
+
+  /* GOOGLE multi-color letters */
+  .google-text { display:inline-flex; gap:2px; align-items:center; font-weight:700; letter-spacing:0.4px; }
+  .google-text span{ font-size:14px; display:inline-block; line-height:1; }
+  .google-text span:nth-child(1){ color:#4285F4; }  /* G - Blue */
+  .google-text span:nth-child(2){ color:#EA4335; }  /* o - Red */
+  .google-text span:nth-child(3){ color:#FBBC05; }  /* o - Yellow */
+  .google-text span:nth-child(4){ color:#4285F4; }  /* g - Blue */
+  .google-text span:nth-child(5){ color:#34A853; }  /* l - Green */
+  .google-text span:nth-child(6){ color:#EA4335; }  /* e - Red */
+
+  .google-text:hover { filter: drop-shadow(0 4px 12px rgba(66,133,244,0.18)); transform:translateY(-2px); transition:0.18s; }
+
+  /* GITHUB styling */
+  .github-text {
+    color:#ffffff;
+    font-weight:700;
+    letter-spacing:0.2px;
+    font-size:14px;
+  }
+  .github-text:hover { filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6)); transform:translateY(-2px); transition:0.18s; }
+
+  /* small svg icons color override so they match text */
+  .social svg { width:18px; height:18px; flex:0 0 18px; }
+  .social.google svg path { fill: none; stroke: none; }
+  .social.github svg path { fill: currentColor; }
+
+  /* ICONS */
+  .eye{width:20px;height:20px;cursor:pointer;fill:white;stroke:white;}
+
+  .links{display:flex;align-items:center;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:13px}
+
+  @media (max-width:880px){
+    .card{grid-template-columns:1fr;max-width:520px;}
+    .right{order:2;}
+  }
+  </style>
+
+</head>
+<body>
+  <div class="card" role="main" aria-labelledby="loginTitle">
+    <div class="left">
+      <div class="brand">
+        <div class="logo">JP</div>
+        <div>
+          <h1 id="loginTitle">🔐 Login to Job Portal</h1>
+          <p class="lead">Sign in to access your dashboard, applications and personalized job matches.</p>
+        </div>
+      </div>
+
+      <form method="POST" novalidate onsubmit="return handleSubmit(event)">
+        <!-- csrf token placeholder for Django -->
+        {% csrf_token %}
+
+        <div>
+          <label for="username">Username / Email / Phone</label>
+          <div class="input">
+            <!-- user icon -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 21c0-3.866-3.582-7-8-7s-8 3.134-8 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input id="username" name="username" type="text" placeholder="name@company.com or +91 98765 43210" required />
+          </div>
+        </div>
+
+        <div>
+          <label for="password">Password</label>
+          <div class="input">
+            <input id="password" name="password" type="password" placeholder="Your secure password" required />
+            <svg class="eye" id="togglePw" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 9a3 3 0 100 6 3 3 0 000-6z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:6px">
+          <button class="btn" type="submit">Login</button>
+          <button class="btn ghost" type="button" onclick="location.href='/register/'">Create account</button>
+        </div>
+
+        <div class="links">
+          <label class="muted" style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="remember" /> Remember me</label>
+          <a href="/forgot-password/" style="color:var(--muted);text-decoration:none">Forgot password?</a>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="muted" style="margin-bottom:8px">Or sign in with</div>
+          <div class="socials">
+
+            <!-- Google button with multicolor text -->
+            <div class="social google" onclick="social('google')" role="button" aria-label="Sign in with Google" title="Sign in with Google" style="display:flex;align-items:center;justify-content:center;gap:10px">
+              <!-- Google 'G' icon simplified -->
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+                <path d="M21 12.3c0-.6-.1-1.1-.2-1.6H12v3h5.4c-.2 1.2-.9 2.3-1.9 3v2h3c1.8-1.6 2.9-4 2.9-6.4z" fill="#4285F4"></path>
+              </svg>
+
+              <div class="google-text" aria-hidden="true">
+                <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+              </div>
+            </div>
+
+            <!-- GitHub button with white branding -->
+            <div class="social github" onclick="social('github')" role="button" aria-label="Sign in with GitHub" title="Sign in with GitHub" style="display:flex;align-items:center;justify-content:center;gap:10px">
+              <!-- GitHub icon (filled) -->
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+                <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.14-3.37-1.14-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.05 1.53 1.05.9 1.54 2.36 1.1 2.94.84.09-.65.35-1.1.64-1.35-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.28.1-2.66 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85.004 1.71.11 2.51.32 1.9-1.3 2.74-1.02 2.74-1.02.55 1.38.2 2.41.1 2.66.64.7 1.03 1.6 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.33-.01 2.4-.01 2.73 0 .26.18.58.69.48A10 10 0 0022 12c0-5.52-4.48-10-10-10z" fill="white"></path>
+              </svg>
+
+              <div class="github-text">GitHub</div>
+            </div>
+
+          </div>
+        </div>
+
+      </form>
+
+      <footer class="small" style="margin-top:12px">By signing in you agree to our <a href="#" style="color:var(--muted)">Terms</a> and <a href="#" style="color:var(--muted)">Privacy Policy</a>.</footer>
+    </div>
+
+    <aside class="right" aria-hidden="false">
+      <h3>Why Job Portal?</h3>
+      <p class="small">Personalized matches, one-click applications, and a dashboard that tracks your progress.</p>
+
+      <div class="features">
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M12 2v10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 12v7h12v-7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong style="display:block;color:white">Smart matching</strong>
+            <span class="muted">Get jobs that actually fit your profile</span>
+          </div>
+        </div>
+
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M12 2l4 4-4 4-4-4 4-4z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 14v6h12v-6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong style="display:block;color:white">One-click apply</strong>
+            <span class="muted">Apply to multiple roles in seconds</span>
+          </div>
+        </div>
+
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M3 7h18" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 11v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong style="display:block;color:white">Progress tracking</strong>
+            <span class="muted">See where you stand with each application</span>
+          </div>
+        </div>
+
+        <div class="feature">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M12 2a10 10 0 100 20 10 10 0 000-20z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 12h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong style="display:block;color:white">Secure & private</strong>
+            <span class="muted">We keep your data safe</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px" class="small">Need help? <a href="/support/" style="color:var(--accent)">Contact support</a></div>
+
+    </aside>
+  </div>
+
+  <script>
+    // password toggle
+    const pw = document.getElementById('password');
+    const toggle = document.getElementById('togglePw');
+    toggle.addEventListener('click', ()=>{
+      if(pw.type === 'password') { pw.type = 'text'; toggle.style.opacity = 0.95; }
+      else { pw.type = 'password'; toggle.style.opacity = 0.95; }
+    });
+
+    // tiny handlers
+    function social(name){
+      // integrate with OAuth endpoints or your backend
+      // replace the alert with a proper OAuth redirect when integrating server-side
+      alert('Sign in with ' + name + ' (implement OAuth redirect)');
+    }
+
+    function handleSubmit(e){
+      // client-side validation example
+      const u = document.getElementById('username').value.trim();
+      const p = pw.value.trim();
+      if(!u || !p){
+        alert('Please enter both username and password.');
+        return false;
+      }
+      // nothing else — form will submit to server
+      return true;
+    }
+  </script>
+</body>
+</html>
